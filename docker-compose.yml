@@ -1,0 +1,31 @@
+version: "3.9"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: nlp_sql_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: nlp_sql_app
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=mistral
+      - DATABASE_URL=sqlite:///./enterprise.db
+      - CHROMA_PERSIST_DIR=./chroma_db
+      - LOG_LEVEL=INFO
+    depends_on:
+      - ollama
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+
+volumes:
+  ollama_data:
