@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DataMind — System Flow Explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080f1a;
+  --bg2: #0d1826;
+  --card: #0f2035;
+  --border: #1a3050;
+  --text: #c8dff4;
+  --text2: #6a94b8;
+  --text3: #3a5878;
+  --c-api: #3b82f6;
+  --c-ai: #a855f7;
+  --c-vec: #f59e0b;
+  --c-graph: #06b6d4;
+  --c-valid: #ef4444;
+  --c-db: #22c55e;
+  --c-out: #f0a030;
+  --accent: #f0a030;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  overflow-x:hidden;
+  background-image:radial-gradient(rgba(255,255,255,.022) 1px,transparent 1px);
+  background-size:24px 24px;
+}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* PROGRESS */
+#prog{position:fixed;top:0;left:0;height:2px;background:var(--accent);z-index:1000;width:0%;transition:width .1s}
+
+/* STICKY NAV */
+#stepnav{
+  position:fixed;top:16px;right:20px;z-index:999;
+  background:rgba(8,15,26,.85);backdrop-filter:blur(12px);
+  border:1px solid var(--border);border-radius:8px;
+  padding:8px 14px;font-family:'JetBrains Mono',monospace;
+  font-size:11px;color:var(--text2);display:none;
+}
+#stepnav span{color:var(--accent)}
+
+/* BACK TO TOP */
+#btt{
+  position:fixed;bottom:24px;right:24px;z-index:999;
+  background:var(--accent);color:#080f1a;border:none;border-radius:50%;
+  width:40px;height:40px;font-size:18px;cursor:pointer;
+  display:none;align-items:center;justify-content:center;
+  box-shadow:0 4px 20px rgba(240,160,48,.4);transition:transform .15s;
+}
+#btt:hover{transform:scale(1.1)}
+
+/* ─── HERO ─── */
+.hero{
+  height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:40px 20px;position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(240,160,48,.07) 0%,transparent 70%);
+}
+.hero-tag{
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--accent);
+  background:rgba(240,160,48,.08);border:1px solid rgba(240,160,48,.2);
+  border-radius:4px;padding:4px 12px;margin-bottom:24px;
+  animation:fadeUp .6s ease both;
+}
+.hero h1{
+  font-family:'Syne',sans-serif;font-weight:800;
+  font-size:clamp(2.2rem,5vw,4rem);line-height:1.1;
+  color:#fff;margin-bottom:16px;
+  animation:fadeUp .6s .1s ease both;
+}
+.hero h1 em{color:var(--accent);font-style:normal}
+.hero-sub{
+  font-size:16px;color:var(--text2);max-width:520px;line-height:1.6;
+  animation:fadeUp .6s .2s ease both;margin-bottom:40px;
+}
+.question-box{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:18px 24px;font-family:'JetBrains Mono',monospace;font-size:15px;
+  color:#fff;max-width:620px;width:100%;text-align:left;
+  animation:fadeUp .6s .3s ease both;
+  box-shadow:0 0 40px rgba(240,160,48,.06);
+  margin-bottom:12px;
+}
+.question-box .label{font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+.typed{border-right:2px solid var(--accent)}
+.flow-hint{
+  display:flex;gap:8px;align-items:center;font-family:'JetBrains Mono',monospace;
+  font-size:11px;color:var(--text3);flex-wrap:wrap;justify-content:center;
+  animation:fadeUp .6s .4s ease both;margin-bottom:40px;
+}
+.flow-hint span{color:var(--text2)}
+.flow-hint .arr{color:var(--accent)}
+.hero-btns{display:flex;gap:12px;animation:fadeUp .6s .5s ease both}
+.btn-primary{
+  background:var(--accent);color:#080f1a;border:none;border-radius:8px;
+  padding:12px 24px;font-family:'Syne',sans-serif;font-weight:700;
+  font-size:14px;cursor:pointer;transition:all .15s;
+  box-shadow:0 4px 20px rgba(240,160,48,.3);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(240,160,48,.4)}
+.btn-sec{
+  background:transparent;color:var(--text2);border:1px solid var(--border);
+  border-radius:8px;padding:12px 24px;font-family:'Syne',sans-serif;
+  font-weight:600;font-size:14px;cursor:pointer;transition:all .15s;
+}
+.btn-sec:hover{border-color:var(--accent);color:var(--accent)}
+.scroll-hint{
+  position:absolute;bottom:32px;left:50%;transform:translateX(-50%);
+  font-size:12px;color:var(--text3);display:flex;flex-direction:column;
+  align-items:center;gap:6px;animation:bounce 2s infinite;
+}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(8px)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── FLOW SECTION ─── */
+.flow-section{max-width:900px;margin:0 auto;padding:60px 20px 0}
+.section-header{text-align:center;margin-bottom:60px}
+.section-header h2{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;color:#fff;margin-bottom:8px}
+.section-header p{color:var(--text2);font-size:14px}
+
+/* Step card */
+.step-wrap{margin-bottom:0;position:relative}
+.step-card{
+  display:grid;grid-template-columns:72px 1fr;gap:24px;
+  padding:28px;background:var(--card);border:1px solid var(--border);
+  border-radius:14px;opacity:0;transform:translateY(28px);
+  transition:opacity .5s ease,transform .5s ease;
+  position:relative;overflow:hidden;
+}
+.step-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--layer-color,var(--accent));
+}
+.step-card.visible{opacity:1;transform:translateY(0)}
+
+.step-left{display:flex;flex-direction:column;align-items:center;gap:10px}
+.step-num{
+  width:48px;height:48px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:18px;
+  background:rgba(var(--layer-rgb),0.15);
+  border:2px solid var(--layer-color,var(--accent));
+  color:var(--layer-color,var(--accent));
+  flex-shrink:0;
+}
+.step-icon{font-size:20px;line-height:1}
+.layer-badge{
+  font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.08em;
+  text-transform:uppercase;padding:3px 7px;border-radius:4px;
+  background:rgba(var(--layer-rgb),0.12);
+  color:var(--layer-color,var(--accent));
+  border:1px solid rgba(var(--layer-rgb),.25);
+  text-align:center;line-height:1.4;
+}
+
+.step-right{}
+.step-title{
+  font-family:'Syne',sans-serif;font-weight:700;font-size:1.2rem;
+  color:#fff;margin-bottom:6px;
+}
+.step-desc{font-size:13.5px;color:var(--text2);line-height:1.6;margin-bottom:14px}
+.file-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.file-pill{
+  font-family:'JetBrains Mono',monospace;font-size:10.5px;
+  background:rgba(10,22,40,.8);border:1px solid var(--border);
+  border-radius:4px;padding:3px 9px;color:var(--layer-color);
+  cursor:default;transition:border-color .12s;
+}
+.file-pill:hover{border-color:var(--layer-color)}
+.fn-label{
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  color:var(--text3);margin-bottom:14px;
+}
+.fn-label code{color:var(--layer-color)}
+
+/* IO panels */
+.io-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+@media(max-width:640px){.io-grid{grid-template-columns:1fr}}
+.io-panel{background:rgba(5,12,22,.7);border:1px solid var(--border);border-radius:8px;padding:12px}
+.io-panel .io-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:7px}
+.io-panel .io-content{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);line-height:1.6;white-space:pre-wrap;word-break:break-all}
+.io-panel .io-content em{color:var(--accent);font-style:normal}
+.io-panel .io-content .hl-kw{color:#f0a030;font-weight:600}
+.io-panel .io-content .hl-str{color:#52c870}
+.io-panel .io-content .hl-num{color:#58aef0}
+
+.note-box{
+  background:rgba(240,160,48,.05);border:1px solid rgba(240,160,48,.15);
+  border-radius:6px;padding:8px 12px;font-size:12px;color:var(--text2);
+  margin-top:8px;
+}
+.note-box strong{color:var(--accent)}
+
+/* Checklist */
+.checklist{list-style:none;margin-top:8px}
+.checklist li{
+  font-family:'JetBrains Mono',monospace;font-size:11.5px;
+  color:var(--text2);padding:4px 0;display:flex;align-items:center;gap:8px;
+  opacity:0;transition:opacity .3s ease;
+}
+.checklist li .ck{color:#22c55e}
+.step-card.visible .checklist li:nth-child(1){opacity:1;transition-delay:.1s}
+.step-card.visible .checklist li:nth-child(2){opacity:1;transition-delay:.25s}
+.step-card.visible .checklist li:nth-child(3){opacity:1;transition-delay:.4s}
+.step-card.visible .checklist li:nth-child(4){opacity:1;transition-delay:.55s}
+.step-card.visible .checklist li:nth-child(5){opacity:1;transition-delay:.7s}
+
+/* Table cards in step 4 */
+.table-cards{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.table-card{
+  background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);
+  border-radius:6px;padding:6px 10px;font-family:'JetBrains Mono',monospace;
+  font-size:11px;color:var(--c-vec);
+}
+.table-card .score{font-size:9px;color:var(--text3);margin-top:2px}
+
+/* Prompt preview */
+.prompt-box{
+  background:rgba(5,12,22,.8);border:1px solid var(--border);border-radius:8px;
+  padding:12px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;
+  margin-top:8px;
+}
+.prompt-section{margin-bottom:6px}
+.prompt-section .ps-label{color:var(--c-ai);font-weight:600;margin-bottom:2px}
+.prompt-section .ps-val{color:var(--text2);padding-left:12px}
+
+/* 3-panel grid */
+.three-panel{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+@media(max-width:600px){.three-panel{grid-template-columns:1fr}}
+.mini-panel{
+  background:rgba(5,12,22,.7);border:1px solid var(--border);
+  border-radius:8px;padding:12px;text-align:center;
+}
+.mini-panel .mp-icon{font-size:22px;margin-bottom:6px}
+.mini-panel .mp-title{font-family:'Syne',sans-serif;font-weight:600;font-size:12px;color:#fff;margin-bottom:4px}
+.mini-panel .mp-sub{font-size:11px;color:var(--text2)}
+
+/* Connector between steps */
+.connector{
+  display:flex;flex-direction:column;align-items:center;
+  padding:6px 0;gap:4px;
+}
+.conn-line{
+  width:2px;height:0;background:linear-gradient(to bottom,var(--layer-color,var(--accent)),var(--next-color,var(--accent)));
+  transition:height .6s ease;border-radius:2px;
+}
+.conn-line.visible{height:36px}
+.conn-label{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  color:var(--text3);letter-spacing:.06em;
+}
+
+/* ─── ARCHITECTURE ─── */
+.arch-section{
+  max-width:780px;margin:80px auto 0;padding:0 20px 80px;
+}
+.arch-title{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;
+  color:#fff;text-align:center;margin-bottom:8px;
+}
+.arch-sub{text-align:center;color:var(--text2);font-size:13px;margin-bottom:40px}
+
+.arch-diagram{display:flex;flex-direction:column;align-items:center;gap:0}
+.arch-row{display:flex;align-items:center;justify-content:center;gap:8px;position:relative}
+.arch-box{
+  border-radius:8px;padding:9px 16px;font-family:'JetBrains Mono',monospace;
+  font-size:11px;font-weight:500;border:1px solid;text-align:center;
+  white-space:nowrap;opacity:0;transform:scale(.92);
+  transition:opacity .45s ease,transform .45s ease;
+  min-width:180px;
+}
+.arch-box.visible{opacity:1;transform:scale(1)}
+.arch-box.api   {color:var(--c-api);border-color:rgba(59,130,246,.3);background:rgba(59,130,246,.08)}
+.arch-box.ai    {color:var(--c-ai);border-color:rgba(168,85,247,.3);background:rgba(168,85,247,.08)}
+.arch-box.vec   {color:var(--c-vec);border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.08)}
+.arch-box.graph {color:var(--c-graph);border-color:rgba(6,182,212,.3);background:rgba(6,182,212,.08)}
+.arch-box.valid {color:var(--c-valid);border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+.arch-box.db    {color:var(--c-db);border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08)}
+.arch-box.out   {color:var(--c-out);border-color:rgba(240,160,48,.3);background:rgba(240,160,48,.08)}
+.arch-box .arch-file{font-size:9px;opacity:.6;margin-top:3px}
+
+.arch-arr{
+  display:flex;flex-direction:column;align-items:center;
+  font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);gap:1px;
+}
+.arch-arr .arrow{font-size:14px;color:var(--text3)}
+.arch-arr-h{
+  display:flex;align-items:center;gap:4px;
+  font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);
+}
+.arch-arr-h .arrow-h{color:var(--accent)}
+.arch-side{
+  display:flex;flex-direction:row;align-items:center;gap:8px;
+}
+.side-box{
+  font-family:'JetBrains Mono',monospace;font-size:10px;border-radius:6px;
+  padding:6px 10px;border:1px dashed;opacity:0;transform:translateX(20px);
+  transition:opacity .45s ease,transform .45s ease;
+}
+.side-box.visible{opacity:1;transform:translateX(0)}
+.side-box.ai {color:var(--c-ai);border-color:rgba(168,85,247,.25);background:rgba(168,85,247,.06)}
+.side-box.vec{color:var(--c-vec);border-color:rgba(245,158,11,.25);background:rgba(245,158,11,.06)}
+
+/* ─── FILE TREE ─── */
+.tree-section{max-width:900px;margin:0 auto;padding:0 20px 80px}
+.tree-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:#fff;text-align:center;margin-bottom:8px}
+.tree-sub{text-align:center;color:var(--text2);font-size:13px;margin-bottom:36px}
+
+.tree{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:24px;font-family:'JetBrains Mono',monospace;font-size:12.5px;
+  line-height:2;
+}
+.tree-folder{color:var(--text2);user-select:none}
+.tree-file{
+  display:flex;align-items:center;gap:8px;padding:1px 0;
+  cursor:default;transition:background .1s;border-radius:4px;padding:2px 6px;
+}
+.tree-file:hover{background:rgba(255,255,255,.03)}
+.tree-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.tree-name{color:var(--text)}
+.tree-role{margin-left:auto;font-size:10px;color:var(--text3);text-align:right}
+.indent1{padding-left:16px}
+.indent2{padding-left:32px}
+.indent3{padding-left:48px}
+
+/* Legend */
+.legend{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:20px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text2)}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ─── FINAL RESULT ─── */
+.result-section{max-width:860px;margin:0 auto;padding:0 20px 100px}
+.result-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:#fff;text-align:center;margin-bottom:8px}
+.result-sub{text-align:center;color:var(--text2);font-size:13px;margin-bottom:36px}
+
+.result-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  overflow:hidden;opacity:0;transform:translateY(24px);transition:opacity .5s ease,transform .5s ease;
+}
+.result-card.visible{opacity:1;transform:translateY(0)}
+.result-explanation{
+  padding:20px 22px;font-size:14.5px;line-height:1.7;color:var(--text);
+  border-bottom:1px solid var(--border);
+}
+.result-section-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 22px;cursor:default;border-bottom:1px solid var(--border);
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  color:var(--text2);text-transform:uppercase;letter-spacing:.06em;
+}
+.sql-display{
+  background:#04080f;padding:16px 22px;font-family:'JetBrains Mono',monospace;
+  font-size:12px;line-height:1.8;overflow-x:auto;white-space:pre;color:#7aade8;
+  border-bottom:1px solid var(--border);
+}
+.kw{color:#f0a030;font-weight:600}.str{color:#52c870}.num{color:#58aef0}.fn{color:#c084fc}
+.result-table-wrap{overflow-x:auto;border-bottom:1px solid var(--border)}
+.rtbl{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:11.5px}
+.rtbl th{background:rgba(0,0,0,.3);padding:8px 14px;text-align:left;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);white-space:nowrap;border-bottom:1px solid var(--border)}
+.rtbl td{padding:7px 14px;color:var(--text2);border-bottom:1px solid rgba(26,48,80,.4);white-space:nowrap}
+.rtbl tr:nth-child(even) td{background:rgba(0,0,0,.1)}
+.rtbl tr:hover td{background:rgba(240,160,48,.04);color:var(--text)}
+.status-unpaid{color:#f87171}.status-overdue{color:#fb923c}.status-partial{color:#fbbf24}
+.result-meta{
+  padding:10px 22px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  background:rgba(0,0,0,.15);
+}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600}
+.b-rows{background:rgba(26,48,80,.5);color:var(--text2);border:1px solid var(--border)}
+.b-conf{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.25)}
+.b-time{background:rgba(26,48,80,.4);color:var(--text3);border:1px solid var(--border)}
+.b-cache{background:rgba(168,85,247,.12);color:#c084fc;border:1px solid rgba(168,85,247,.25)}
+
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+
+<div id="stepnav">Step <span id="stepnum">—</span> / 13</div>
+
+<button id="btt" onclick="scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero" id="top">
+  <div class="hero-tag">Enterprise NLP-to-SQL · System Architecture</div>
+  <h1>DataMind —<br><em>How It Works</em></h1>
+  <p class="hero-sub">Trace every file, every function, every decision — from your plain English question to the final SQL answer.</p>
+
+  <div class="question-box">
+    <div class="label">User Question</div>
+    <span id="typed" class="typed"></span>
+  </div>
+
+  <div class="flow-hint">
+    <span>POST /api/v1/query</span>
+    <span class="arr">→</span>
+    <span>Intent: DATA</span>
+    <span class="arr">→</span>
+    <span>Cache ⚡</span>
+    <span class="arr">→</span>
+    <span>SQL Generated</span>
+    <span class="arr">→</span>
+    <span>Validated ✅</span>
+    <span class="arr">→</span>
+    <span>98 rows returned</span>
+  </div>
+
+  <div class="hero-btns">
+    <button class="btn-primary" onclick="document.getElementById('flow-start').scrollIntoView({behavior:'smooth'})">↓ Trace the Journey</button>
+    <button class="btn-sec" onclick="document.getElementById('result').scrollIntoView({behavior:'smooth'})">Jump to Result</button>
+  </div>
+
+  <div class="scroll-hint">↓ scroll</div>
+</section>
+
+<!-- ═══ FLOW ═══ -->
+<div class="flow-section" id="flow-start">
+  <div class="section-header">
+    <h2>The 13-Step Pipeline</h2>
+    <p>Every step that runs when you ask a business question</p>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="step-wrap" id="sw1">
+    <div class="step-card" id="s1" style="--layer-color:var(--c-api);--layer-rgb:59,130,246">
+      <div class="step-left">
+        <div class="step-num">1</div>
+        <div class="step-icon">🌐</div>
+        <div class="layer-badge">API<br>Layer</div>
+      </div>
+      <div class="step-right">
+        <div class="step-title">FastAPI Receives Request</div>
+        <div class="step-desc">The question arrives as an HTTP POST. FastAPI validates the request body using Pydantic, logs it via middleware, and routes to the query handler.</div>
+        <div class="file-row">
+          <span class="file-pill">app/main.py</span>
+          <span class="file-pill">app/api/routes/query.py</span>
+          <span class="file-pill">app/middleware/logging_middleware.py</span>
+        </div>
+        <div class="fn-label">Function: <code>ask_question(req: QueryRequest)</code></div>
+        <div class="io-grid">
+          <div class="io-panel">
+            <div class="io-label">→ Input (HTTP Body)</div>
+            <div class="io-content">{
+  "question": <span class="hl-str">"Show unpaid invoices above 5 lakhs from last quarter"</span>,
+  "session_id": <span class="hl-str">"demo-001"</span>
+}</div>
+          </div>
+          <div class="io-panel">
+            <div class="io-label">← Output</div>
+            <div class="io-content">Request <em>[58b93209]</em> logged
+→ POST /api/v1/query 200 | 449ms
+Routed to query handler ✓</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector" id="c1"><div class="conn-line" style="--layer-color:var(--c-api);--next-color:var(--c-ai)"></div><div class="conn-label">↓ ask_question() calls classify_intent()</div></div>
+
+  <!-- STEP 2 -->
+  <div class="step-wrap" id="sw2">
+    <div class="step-card" id="s2" style="--layer-color:var(--c-ai);--layer-rgb:168,85,247">
+      <div class="step-left">
+        <div class="step-num">2</div>
+        <div class="step-icon">🧠</div>
+        <div class="layer-badge">AI/LLM<br>Layer</div>
+      </div>
+      <div class="step-right">
+        <div class="step-title">Intent Classification</div>
+        <div class="step-desc">A fast Mistral 7B call classifies the question. Is it a DATA query (needs SQL pipeline) or CHAT (direct conversational reply)? This single routing decision changes the entire execution path.</div>
+        <div class="file-row">
+          <span class="file-pill">app/llm/intent_classifier.py</span>
+          <span class="file-pill">app/llm/gemini_client.py</span>
+        </div>
+        <div class="fn-label">Function: <code>classify_intent(question) → "data" | "chat"</code></div>
+        <div class="io-grid">
+          <div class="io-panel">
+            <div class="io-label">→ Classifier Prompt</div>
+            <div class="io-content">Classify: <em>"Show unpaid invoices above 5 lakhs from last quarter"</em>
+
+Reply with one word:
+DATA or CHAT</div>
+          </div>
+          <div class="io-panel">
+            <div class="io-label">← Classification Result</div>
+            <div class="io-content">Intent: <em>DATA</em>
+→ Routes to full SQL pipeline
+
+(CHAT → direct Mistral reply,
+ no SQL, no DB execution)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector" id="c2"><div class="conn-line" style="--layer-color:var(--c-ai);--next-color:var(--c-vec)"></div><div class="conn-label">↓ run_query() starts SQL pipeline</div></div>
+
+  <!-- STEP 3 -->
+  <div class="step-wrap" id="sw3">
+    <div class="step-card" id="s3" style="--layer-color:var(--c-vec);--layer-rgb:245,158,11">
+      <div class="step-left">
+        <div class="step-num">3</div>
+        <div class="step-icon">⚡</div>
+        <div class="layer-badge">Cache<br>Layer</div>
+      </div>
+      <div class="step-right">
+        <div class="step-title">Semantic Cache Lookup</div>
+        <div class="step-desc">Before calling the LLM for SQL, ChromaDB checks if a semantically similar question was asked before. If cosine similarity ≥ 0.92, return verified cached SQL instantly — no LLM call needed.</div>
+        <div class="file-row">
+          <span class="file-pill">app/services/cache_service.py</span>
+        </div>
+        <div class="fn-label">Function: <code>get_cached_sql(question) → sql | None</code></div>
+        <div class="io-grid">
+          <div class="io-panel">
+            <div class="io-label">→ ChromaDB Query</div>
+            <div class="io-content">embedding("Show unpaid invoices...")
+↓ cosine similarity search
+threshold: <em>0.92</em>
+checking <em>10</em> cached queries...</div>
+          </div>
+          <div class="io-panel">
+            <div class="io-label">← CACHE HIT ⚡</div>
+            <div class="io-content">similarity: <em>0.97</em> ✓
+Verified SQL retrieved
+Steps 4–8 SKIPPED
+→ Jump directly to execution</div>
+          </div>
+        </div>
+        <div class="note-box"><strong>Cache MISS path:</strong> Steps 4–8 run (schema retrieval → graph → prompt → LLM → validate). Cache HIT skips all of that.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector" id="c3"><div class="conn-line" style="--layer-color:var(--c-vec);--next-color:var(--c-vec)"></div><div class="conn-label">↓ (cache miss path) schema retrieval</div></div>
+
+  <!-- STEP 4 -->
+  <div class="step-wrap" id="sw4">
+    <div class="step-card" id="s4" style="--layer-color:var(--c-vec);--layer-rgb:245,158,11">
+      <div class="step-left">
+        <div class="step-num">4</div>
+        <div class="step-icon">🔍</div>
+        <div class="layer-badge">Vector<br>Search</div>
+      </div>
+      <div class="step-right">
+        <div class="step-title">Schema Retrieval (Cache Miss Only)</div>
+        <div class="step-desc">sentence-transformers embeds the question into a vector. ChromaDB finds the top-5 most semantically relevant tables from 15 (scales to 800+). Only these schemas are sent to the LLM — preventing hallucination.</div>
+        <div class="file-row">
+          <span class="file-pill">app/schema/schema_manager.py</span>
+          <span class="file-pill">database/enterprise_schema.py</span>
+        </div>
+        <div class="fn-label">Function: <code>get_relevant_tables(question, top_k=5)</code></div>
+        <div class="table-cards">
+          <div class="table-card">invoices<div class="score">relevance: 0.94</div></div>
+          <div class="table-card">customers<div class="score">relevance: 0.91</div></div>
+          <div class="table-card">payments<div class="score">relevance: 0.87</div></div>
+          <div class="table-card">sales_orders<div class="score">relevance: 0.82</div></div>
+          <div class="table-card">contracts<div class="score">relevance: 0.74</div></div>
+        </div>
+        <div class="note-box" style="margin-top:10px"><strong>Why this matters:</strong> Sending only 5 relevant table schemas (not all 800+) prevents the LLM from hallucinating columns/tables that don't exist.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector" id="c4"><div class="conn-line" style="--layer-color:var(--c-vec);--next-color:var(--c-graph)"></div><div class="conn-label">↓ discover_joins(table_names)</div></div>
+
+  <!-- STEP 5 -->
+  <div class="step-wrap" id="sw5">
+    <div class="step-card" id="s5" style="--layer-color:var(--c-graph);--layer-rgb:6,182,212">
+      <div class="step-left">
+        <div class="step-num">5</div>
+        <div class="step-icon">🔗</div>
+        <div class="layer-badge">Graph<br>Reasoning</div>
+      </div>
+      <div class="step-right">
+        <div class="step-title">Graph-Based Schema Reasoning</div>
+        <div class="step-desc">NetworkX builds a directed graph from all foreign key relationships. When relevant tables are found, the shortest JOIN path between them is computed automatically — no hardcoded JOINs anywhere.</div>
+        <div class="file-row">
+          <span class="file-pill">app/schema/schema_graph.py</span>
+        </div>
+        <div class="fn-label">Function: <code>discover_joins(table_names) → list[str]</code></div>
+        <div class="io-grid">
+          <div class="io-panel">
+            <div class="io-label">→ FK Graph (NetworkX DiGraph)</div>
+            <div class="io-content">invoices ──FK──→ customers
+invoices ──FK──→ invoice_items
+sales_orders ──FK──→ invoices
+payments ──FK──→ invoices
+15 tables, 15 relationships</div>
+          </div>
+          <div class="io-panel">
+            <div class="io-label">← Discovered JOIN conditions</div>
+            <div class="io-content"><em>invoices.customer_id
+  = customers.customer_id</em>
+
+Shortest path length: 1
+Injected into prompt ✓</div>
+          </div>
+        </div>
+        <div class="note-box"><strong>Bonus feature:</strong> Graph-based schema reasoning + autonomous join discovery. No hardcoded JOIN logic anywhere in the codebase.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector" id="c5"><div class="conn-line" style="--layer-color:var(--c-graph);--next-color:var(--c-ai)"></div><div class="conn-label">↓ build_sql_prompt() with join_hints</div></div>
+
+  <!-- STEP 6 -->
+  <div class="step-wrap" id="sw6">
+    <div class="step-card" id="s6" style="--layer-color:var(--c-ai);--layer-rgb:168,85,247">
+      <div class="step-left">
+        <div class="step-num">6</div>
+        <div class="step-icon">📝</div>
+        <div class="layer-badge">Adaptive<br>Prompt</div>
+      </div>
+      <div class="step-right">
+        <div class="step-title">Adaptive Prompt Building</div>
+        <div class="step-desc">The prompt is dynamically assembled — not static. It includes the retrieved table schemas, auto-discovered JOINs from the graph, business glossary, and multi-turn conversation history. Every query gets a custom prompt.</div>
+        <div class="file-row">
+          <span class="file-pill">app/llm/prompt_builder.py</span>
+        </div>
+        <div class="fn-label">Function: <code>build_sql_prompt(question, schema_text, history, join_hints)</code></div>
+        <div class="prompt-box">
+          <div class="prompt-section"><div class="ps-label">[SCHEMA]</div><div class="ps-val">CREATE TABLE invoices (...) | CREATE TABLE customers (...)</div></div>
+          <div class="prompt-section"><div class="ps-label">[BUSINESS GLOSSARY]</div><div class="ps-val">lakh=100000 | last quarter=date('now','-3 months') | outstanding=paid_amount &lt; total_amount</div></div>
+          <div class="prompt-section"><div class="ps-label">[JOIN HINTS — from graph]</div><div class="ps-val">invoices.customer_id = customers.customer_id</div></div>
+          <div class="prompt-section"><div class="ps-label">[CONVERSATION HISTORY]</div><div class="ps-val">(multi-turn: last 4 turns injected here)</div></div>
+          <div class="prompt-section"><div class="ps-label">[QUESTION]</div><div class="ps-val">Show unpaid invoices above 5 lakhs from last quarter</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector" id="c6"><div class="conn-line" style="--layer-color:var(--c-ai);--next-color:var(--c-ai)"></div><div class="conn-label">↓ generate_with_retry(prompt)</div></div>
+
+  <!-- STEP 7 -->
+  <div class="step-wrap" id="sw7">
+    <div class="step-card" id="s7" style="--layer-color:var(--c-ai);--layer-rgb:168,85,247">
+      <div class="step-left">
+        <div class="step-num">7</div>
+        <div class="step-icon">🤖</div>
+        <div class="layer-badge">Mistral<br>7B LLM</div>
+      </div>
+      <div class="step-right">
+        <div class="step-title">SQL Generation — Mistral 7B</div>
+        <div class="step-desc">Ollama runs Mistral 7B locally. The adaptive prompt is sent. If the generated SQL fails validation, an automatic correction prompt is sent (up to 3 retries). Confidence score decreases with each retry.</div>
+        <div class="file-row">
+          <span class="file-pill">app/llm/gemini_client.py</span>
+          <span class="file-pill">Ollama → mistral:7b</span>
+        </div>
+        <div class="fn-label">Function: <code>generate_with_retry(prompt, max_retries=3, temperature=0.1)</code></div>
+        <div class="io-grid">
+          <div class="io-panel">
+            <div class="io-label">→ Retry Mechanism</div>
+            <div class="io-content">Attempt 1 → generate SQL
+  → validate_sql() → ✓ pass
+  Confidence: <em>1.0</em>
+
+(if fail → correction_prompt
+  Attempt 2 → confidence: 0.85
+  Attempt 3 → confidence: 0.70)</div>
+          </div>
+          <div class="io-panel">
+            <div class="io-label">← Generated SQL (raw)</div>
+            <div class="io-content">SELECT i.invoice_id,
+  c.customer_name,
+  i.total_amount,
+  i.due_date, i.status
+FROM invoices AS i
+JOIN customers AS c ON
+  i.customer_id=c.customer_id
+WHERE i.total_amount > <em>500000</em>
+  AND i.paid_amount < i.total_amount
+ORDER BY i.total_amount DESC
+LIMIT 100</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector" id="c7"><div class="conn-line" style="--layer-color:var(--c-ai);--next-color:var(--c-valid)"></div><div class="conn-label">↓ validate_sql(sql)</div></div>
+
+  <!-- STEP 8 -->
+  <div class="step-wrap" id="sw8">
+    <div class="step-card" id="s8" style="--layer-color:var(--c-valid);--layer-rgb:239,68,68">
+      <div class="step-left">
+        <div class="step-num">8</div>
+        <div class="step-icon">🛡</div>
+        <div class="layer-badge">Safety<br>Checks</div>
+      </div>
+      <div class="step-right">
+        <div class="step-title">SQL Validation & Safety Layer</div>
+        <div class="step-desc">Every generated SQL passes through a strict safety validator before touching the database. Blocks all destructive operations. Strips markdown wrappers. Auto-adds LIMIT if missing. Parses with sqlparse to verify structure.</div>
+        <div class="file-row">
+          <span class="file-pill">app/validation/sql_validator.py</span>
+        </div>
+        <div class="fn-label">Functions: <code>extract_sql_from_response(raw)</code> → <code>validate_sql(sql)</code></div>
+        <ul class="checklist">
+          <li><span class="ck">✅</span> Starts with SELECT (not DROP/INSERT/UPDATE)</li>
+          <li><span class="ck">✅</span> No DROP, DELETE, TRUNCATE, ALTER keywords</li>
+          <li><span class="ck">✅</span> No UNION SELECT injection patterns</li>
+          <li><span class="ck">✅</span> LIMIT 100 auto-added if missing</li>
+          <li><span class="ck">✅</span> sqlparse confirms valid query structure</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector" id="c8"><div class="conn-line" style="--layer-color:var(--c-valid);--next-color:var(--c-db)"></div><div class="conn-label">↓ execute_query(validated_sql)</div></div>
+
+  <!-- STEP 9 -->
+  <div class="step-wrap" id="sw9">
+    <div class="step-card" id="s9" style="--layer-color:var(--c-db);--layer-rgb:34,197,94">
+      <div class="step-left">
+        <div class="step-num">9</div>
+        <div class="step-icon">🗄</div>
+        <div class="layer-badge">Database<br>Layer</div>
+      </div>
+      <div class="step-right">
+        <div class="step-title">Database Execution (SQLAlchemy)</div>
+        <div class="step-desc">SQLAlchemy executes the validated SQL on the SQLite enterprise database. 15 tables, 830+ rows of realistic Indian enterprise data across Finance, Sales, HR, Procurement, and Inventory domains.</div>
+        <div class="file-row">
+          <span class="file-pill">app/models/database.py</span>
+          <span class="file-pill">database/enterprise_schema.py</span>
+          <span class="file-pill">enterprise.db</span>
+        </div>
+        <div class="fn-label">Function: <code>execute_query(sql: str) → list[dict]</code></div>
+        <div class="io-panel" style="margin-bottom:10px">
+          <div class="io-label">→ SQL Executed</div>
+          <div class="io-content"><span class="hl-kw">SELECT</span> i.invoice_id, c.customer_name, i.invoice_date, i.total_amount, i.due_date, i.status
+<span class="hl-kw">FROM</span> invoices <span class="hl-kw">AS</span> i <span class="hl-kw">JOIN</span> customers <span class="hl-kw">AS</span> c <span class="hl-kw">ON</span> i.customer_id = c.customer_id
+<span class="hl-kw">WHERE</span> i.invoice_date >= date(<span class="hl-str">'now'</span>, <span class="hl-str">'-3 months'</span>)
+  <span class="hl-kw">AND</span> i.total_amount > <span class="hl-num">500000</span>
+  <span class="hl-kw">AND</span> i.paid_amount < i.total_amount
+<span class="hl-kw">ORDER BY</span> i.total_amount <span class="hl-kw">DESC</span> <span class="hl-kw">LIMIT</span> <span class="hl-num">100</span></div>
+        </div>
+        <div class="io-grid">
+          <div class="io-panel"><div class="io-label">← Result</div><div class="io-content"><em>98 rows</em> returned in 45ms
+Multi-table JOIN ✓
+Sorted by amount DESC ✓</div></div>
+          <div class="io-panel"><div class="io-label">← Schema Info</div><div class="io-content">15 tables · 830+ rows
+Domains: Finance, Sales,
+HR, Procurement, Inventory</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector" id="c9"><div class="conn-line" style="--layer-color:var(--c-db);--next-color:var(--c-ai)"></div><div class="conn-label">↓ build_explanation_prompt(results)</div></div>
+
+  <!-- STEP 10 -->
+  <div class="step-wrap" id="sw10">
+    <div class="step-card" id="s10" style="--layer-color:var(--c-ai);--layer-rgb:168,85,247">
+      <div class="step-left">
+        <div class="step-num">10</div>
+        <div class="step-icon">💡</div>
+        <div class="layer-badge">Business<br>Explain</div>
+      </div>
+      <div class="step-right">
+        <div class="step-title">Business Explanation Generation</div>
+        <div class="step-desc">A second Mistral call converts raw database results into a plain-English business summary. Written for non-technical business users — no SQL jargon, just insights.</div>
+        <div class="file-row">
+          <span class="file-pill">app/llm/prompt_builder.py</span>
+          <span class="file-pill">app/llm/gemini_client.py</span>
+        </div>
+        <div class="fn-label">Functions: <code>build_explanation_prompt()</code> → <code>generate_with_retry(temp=0.3)</code></div>
+        <div class="io-panel">
+          <div class="io-label">← Business Explanation (actual output)</div>
+          <div class="io-content"><em>"The query has retrieved 98 unpaid invoices from the last quarter with total amounts exceeding ₹5 lakhs each. Notably, several are overdue and still unpaid as of today. The largest unpaid invoice is ₹14.81 lakhs, due April 16 2026, from Customer Corp 9."</em></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector" id="c10"><div class="conn-line" style="--layer-color:var(--c-ai);--next-color:var(--c-api)"></div><div class="conn-label">↓ record_query() + cache_query() + add_turn()</div></div>
+
+  <!-- STEP 11 -->
+  <div class="step-wrap" id="sw11">
+    <div class="step-card" id="s11" style="--layer-color:var(--c-api);--layer-rgb:59,130,246">
+      <div class="step-left">
+        <div class="step-num">11</div>
+        <div class="step-icon">📊</div>
+        <div class="layer-badge">Metrics<br>& Cache</div>
+      </div>
+      <div class="step-right">
+        <div class="step-title">Metrics, Cache Write & Session Save</div>
+        <div class="step-desc">Three things happen simultaneously: latency and success metrics are recorded, the SQL is written to the semantic cache for future similar questions, and the turn is saved to the session for multi-turn conversation.</div>
+        <div class="file-row">
+          <span class="file-pill">app/core/metrics_tracker.py</span>
+          <span class="file-pill">app/services/cache_service.py</span>
+          <span class="file-pill">app/services/conversation_service.py</span>
+        </div>
+        <div class="three-panel">
+          <div class="mini-panel"><div class="mp-icon">📈</div><div class="mp-title">Metrics Updated</div><div class="mp-sub">total_queries++, latency=449ms, success_rate=100%</div></div>
+          <div class="mini-panel"><div class="mp-icon">⚡</div><div class="mp-title">Cache Written</div><div class="mp-sub">Next similar question returns instantly, similarity≥0.92</div></div>
+          <div class="mini-panel"><div class="mp-icon">💬</div><div class="mp-title">Session Saved</div><div class="mp-sub">Multi-turn history stored — follow-up questions have context</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector" id="c11"><div class="conn-line" style="--layer-color:var(--c-api);--next-color:var(--c-api)"></div><div class="conn-label">↓ QueryResponse assembled</div></div>
+
+  <!-- STEP 12 -->
+  <div class="step-wrap" id="sw12">
+    <div class="step-card" id="s12" style="--layer-color:var(--c-api);--layer-rgb:59,130,246">
+      <div class="step-left">
+        <div class="step-num">12</div>
+        <div class="step-icon">📦</div>
+        <div class="layer-badge">JSON<br>Response</div>
+      </div>
+      <div class="step-right">
+        <div class="step-title">JSON Response Assembled</div>
+        <div class="step-desc">The QueryResponse Pydantic model serialises all fields into a structured JSON response. Every field the frontend needs is included — explanation, SQL, data, metadata badges.</div>
+        <div class="file-row">
+          <span class="file-pill">app/api/routes/query.py → QueryResponse</span>
+        </div>
+        <div class="io-panel">
+          <div class="io-label">← HTTP 200 JSON Response</div>
+          <div class="io-content">{
+  "question": <span class="hl-str">"Show unpaid invoices above 5 lakhs..."</span>,
+  "intent": <span class="hl-str">"data"</span>,
+  "sql": <span class="hl-str">"SELECT i.invoice_id, c.customer_name..."</span>,
+  "data": [ <em>...98 rows...</em> ],
+  "row_count": <span class="hl-num">98</span>,
+  "explanation": <span class="hl-str">"The query retrieved 98 unpaid..."</span>,
+  "relevant_tables": [<span class="hl-str">"invoices"</span>, <span class="hl-str">"customers"</span>],
+  "from_cache": <span class="hl-num">true</span>,
+  "confidence_score": <span class="hl-num">1.0</span>,
+  "execution_time_ms": <span class="hl-num">449</span>
+}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector" id="c12"><div class="conn-line" style="--layer-color:var(--c-api);--next-color:var(--c-out)"></div><div class="conn-label">↓ frontend renders chat card</div></div>
+
+  <!-- STEP 13 -->
+  <div class="step-wrap" id="sw13">
+    <div class="step-card" id="s13" style="--layer-color:var(--c-out);--layer-rgb:240,160,48">
+      <div class="step-left">
+        <div class="step-num">13</div>
+        <div class="step-icon">💬</div>
+        <div class="layer-badge">UI<br>Render</div>
+      </div>
+      <div class="step-right">
+        <div class="step-title">Frontend Renders the Response</div>
+        <div class="step-desc">The chat UI receives the JSON and renders a full response card: explanation text, collapsible SQL with syntax highlighting, a scrollable results table, and metadata badges. All in vanilla JS — no framework.</div>
+        <div class="file-row">
+          <span class="file-pill">frontend/index.html</span>
+          <span class="file-pill">renderMsg() → buildTable()</span>
+        </div>
+        <div class="io-panel">
+          <div class="io-label">← Rendered Response Card</div>
+          <div class="io-content" style="font-size:12px">
+┌─────────────────────────────────────────────┐
+│ "The query retrieved 98 unpaid invoices..."  │
+├── ⌨ SQL Query ────────────────────── [copy] ─┤
+│  SELECT i.invoice_id, c.customer_name...     │
+├── ▦ Results (98 rows) ────────────────────── ┤
+│  invoice_id │ customer_name │ total_amount   │
+│  97         │ Customer Corp │ 1,481,066      │
+│  1          │ Customer Corp │ 1,476,309      │
+├─────────────────────────────────────────────┤
+│ 📊 98 rows │ ✓ High │ ⏱ 449ms │ ⚡ cached  │
+└─────────────────────────────────────────────┘</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /flow-section -->
+
+<!-- ═══ ARCHITECTURE DIAGRAM ═══ -->
+<section class="arch-section" id="arch">
+  <div class="arch-title">System Architecture</div>
+  <p class="arch-sub">Complete flow from user input to final response</p>
+
+  <div class="arch-diagram">
+    <div class="arch-row"><div class="arch-box api observe-arch">🌐 User / Browser<div class="arch-file">frontend/index.html</div></div></div>
+    <div class="arch-arr"><div class="arrow">↓</div><span>POST /api/v1/query</span></div>
+    <div class="arch-row"><div class="arch-box api observe-arch">⚙ FastAPI App<div class="arch-file">app/main.py</div></div></div>
+    <div class="arch-arr"><div class="arrow">↓</div><span>middleware logs request</span></div>
+    <div class="arch-row">
+      <div class="arch-box api observe-arch">🧠 Intent Classifier<div class="arch-file">app/llm/intent_classifier.py</div></div>
+      <div class="arch-arr-h"><span class="arrow-h">──CHAT──→</span></div>
+      <div class="side-box ai observe-arch">💬 Direct LLM Reply<div style="font-size:9px;margin-top:2px">no SQL, no DB</div></div>
+    </div>
+    <div class="arch-arr"><div class="arrow">↓</div><span>intent = DATA</span></div>
+    <div class="arch-row">
+      <div class="arch-box vec observe-arch">⚡ Semantic Cache<div class="arch-file">app/services/cache_service.py</div></div>
+      <div class="arch-arr-h"><span class="arrow-h">──HIT──→</span></div>
+      <div class="side-box vec observe-arch">Skip to execution<div style="font-size:9px;margin-top:2px">similarity ≥ 0.92</div></div>
+    </div>
+    <div class="arch-arr"><div class="arrow">↓</div><span>cache MISS</span></div>
+    <div class="arch-row">
+      <div class="arch-box vec observe-arch">🔍 Schema Retrieval<div class="arch-file">app/schema/schema_manager.py</div></div>
+      <div class="arch-arr-h"><span class="arrow-h">←──</span></div>
+      <div class="side-box vec observe-arch">ChromaDB Index<div style="font-size:9px;margin-top:2px">sentence-transformers</div></div>
+    </div>
+    <div class="arch-arr"><div class="arrow">↓</div><span>top-5 tables found</span></div>
+    <div class="arch-row">
+      <div class="arch-box graph observe-arch">🔗 Schema Graph<div class="arch-file">app/schema/schema_graph.py</div></div>
+      <div class="arch-arr-h"><span class="arrow-h">←──</span></div>
+      <div class="side-box ai observe-arch" style="color:var(--c-graph);border-color:rgba(6,182,212,.25);background:rgba(6,182,212,.06)">NetworkX FK Graph<div style="font-size:9px;margin-top:2px">auto JOIN discovery</div></div>
+    </div>
+    <div class="arch-arr"><div class="arrow">↓</div><span>JOIN hints injected</span></div>
+    <div class="arch-row"><div class="arch-box ai observe-arch">📝 Adaptive Prompt Builder<div class="arch-file">app/llm/prompt_builder.py</div></div></div>
+    <div class="arch-arr"><div class="arrow">↓</div><span>custom prompt</span></div>
+    <div class="arch-row">
+      <div class="arch-box ai observe-arch">🤖 Mistral 7B (Ollama)<div class="arch-file">app/llm/gemini_client.py</div></div>
+      <div class="arch-arr-h"><span class="arrow-h">──fail──→</span></div>
+      <div class="side-box ai observe-arch">Correction Prompt<div style="font-size:9px;margin-top:2px">max 3 retries</div></div>
+    </div>
+    <div class="arch-arr"><div class="arrow">↓</div><span>SQL generated</span></div>
+    <div class="arch-row"><div class="arch-box valid observe-arch">🛡 SQL Validator<div class="arch-file">app/validation/sql_validator.py</div></div></div>
+    <div class="arch-arr"><div class="arrow">↓</div><span>safety confirmed</span></div>
+    <div class="arch-row"><div class="arch-box db observe-arch">🗄 SQLAlchemy → SQLite<div class="arch-file">app/models/database.py · enterprise.db</div></div></div>
+    <div class="arch-arr"><div class="arrow">↓</div><span>98 rows</span></div>
+    <div class="arch-row"><div class="arch-box ai observe-arch">💡 Business Explanation<div class="arch-file">app/llm/prompt_builder.py + Mistral</div></div></div>
+    <div class="arch-arr"><div class="arrow">↓</div></div>
+    <div class="arch-row"><div class="arch-box api observe-arch">📈 Metrics + Cache Write<div class="arch-file">app/core/metrics_tracker.py · cache_service.py</div></div></div>
+    <div class="arch-arr"><div class="arrow">↓</div><span>JSON response</span></div>
+    <div class="arch-row"><div class="arch-box out observe-arch">✅ Chat UI Renders Result<div class="arch-file">frontend/index.html</div></div></div>
+  </div>
+</section>
+
+<!-- ═══ FILE TREE ═══ -->
+<section class="tree-section" id="filetree">
+  <div class="tree-title">Every File — What It Does</div>
+  <p class="tree-sub">Color-coded by layer. Every file in the repository explained.</p>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-api)"></div>API Layer</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-ai)"></div>AI/LLM</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-vec)"></div>Vector/Cache</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-graph)"></div>Graph/Schema</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-valid)"></div>Validation</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-db)"></div>Database</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-out)"></div>Frontend/Output</div>
+  </div>
+
+  <div class="tree">
+    <div class="tree-folder">📁 nlp-sql-platform/</div>
+    <div class="indent1">
+      <div class="tree-folder">📁 app/</div>
+      <div class="indent2">
+        <div class="tree-file"><div class="tree-dot" style="background:var(--c-api)"></div><span class="tree-name">main.py</span><span class="tree-role">FastAPI app entry, CORS, route registration</span></div>
+        <div class="tree-folder">📁 api/routes/</div>
+        <div class="indent3">
+          <div class="tree-file"><div class="tree-dot" style="background:var(--c-api)"></div><span class="tree-name">query.py</span><span class="tree-role">POST /query · intent routing · streaming SSE</span></div>
+          <div class="tree-file"><div class="tree-dot" style="background:var(--c-graph)"></div><span class="tree-name">schema.py</span><span class="tree-role">GET /schema/tables · /schema/search</span></div>
+          <div class="tree-file"><div class="tree-dot" style="background:var(--c-api)"></div><span class="tree-name">health.py</span><span class="tree-role">GET /health — DB connectivity check</span></div>
+          <div class="tree-file"><div class="tree-dot" style="background:var(--c-api)"></div><span class="tree-name">metrics.py</span><span class="tree-role">GET /metrics — monitoring dashboard</span></div>
+        </div>
+        <div class="tree-folder">📁 core/</div>
+        <div class="indent3">
+          <div class="tree-file"><div class="tree-dot" style="background:var(--c-api)"></div><span class="tree-name">config.py</span><span class="tree-role">Settings, env vars, Pydantic-settings</span></div>
+          <div class="tree-file"><div class="tree-dot" style="background:var(--c-api)"></div><span class="tree-name">logging_config.py</span><span class="tree-role">Structured logger → console + logs/app.log</span></div>
+          <div class="tree-file"><div class="tree-dot" style="background:var(--c-api)"></div><span class="tree-name">metrics_tracker.py</span><span class="tree-role">In-memory query stats, latency, cache hit rate</span></div>
+        </div>
+        <div class="tree-folder">📁 llm/</div>
+        <div class="indent3">
+          <div class="tree-file"><div class="tree-dot" style="background:var(--c-ai)"></div><span class="tree-name">gemini_client.py</span><span class="tree-role">Ollama/Mistral HTTP client, retry logic</span></div>
+          <div class="tree-file"><div class="tree-dot" style="background:var(--c-ai)"></div><span class="tree-name">intent_classifier.py</span><span class="tree-role">DATA vs CHAT classifier + chat responder</span></div>
+          <div class="tree-file"><div class="tree-dot" style="background:var(--c-ai)"></div><span class="tree-name">prompt_builder.py</span><span class="tree-role">Adaptive SQL prompt + explanation + correction</span></div>
+        </div>
+        <div class="tree-folder">📁 middleware/</div>
+        <div class="indent3">
+          <div class="tree-file"><div class="tree-dot" style="background:var(--c-api)"></div><span class="tree-name">logging_middleware.py</span><span class="tree-role">Request/response logger with unique request IDs</span></div>
+        </div>
+        <div class="tree-folder">📁 models/</div>
+        <div class="indent3">
+          <div class="tree-file"><div class="tree-dot" style="background:var(--c-db)"></div><span class="tree-name">database.py</span><span class="tree-role">SQLAlchemy engine, SessionLocal, execute_query()</span></div>
+        </div>
+        <div class="tree-folder">📁 schema/</div>
+        <div class="indent3">
+          <div class="tree-file"><div class="tree-dot" style="background:var(--c-vec)"></div><span class="tree-name">schema_manager.py</span><span class="tree-role">ChromaDB vector search for relevant tables</span></div>
+          <div class="tree-file"><div class="tree-dot" style="background:var(--c-graph)"></div><span class="tree-name">schema_graph.py</span><span class="tree-role">NetworkX FK graph, autonomous JOIN discovery</span></div>
+        </div>
+        <div class="tree-folder">📁 services/</div>
+        <div class="indent3">
+          <div class="tree-file"><div class="tree-dot" style="background:var(--c-api)"></div><span class="tree-name">query_service.py</span><span class="tree-role">Main 13-step pipeline orchestrator</span></div>
+          <div class="tree-file"><div class="tree-dot" style="background:var(--c-vec)"></div><span class="tree-name">cache_service.py</span><span class="tree-role">Semantic cache: cosine similarity ≥ 0.92</span></div>
+          <div class="tree-file"><div class="tree-dot" style="background:var(--c-api)"></div><span class="tree-name">conversation_service.py</span><span class="tree-role">Multi-turn session history (last 10 turns)</span></div>
+        </div>
+        <div class="tree-folder">📁 validation/</div>
+        <div class="indent3">
+          <div class="tree-file"><div class="tree-dot" style="background:var(--c-valid)"></div><span class="tree-name">sql_validator.py</span><span class="tree-role">SQL safety: blocks DDL/DML, verifies SELECT-only</span></div>
+        </div>
+      </div>
+
+      <div class="tree-folder">📁 database/</div>
+      <div class="indent2">
+        <div class="tree-file"><div class="tree-dot" style="background:var(--c-db)"></div><span class="tree-name">enterprise_schema.py</span><span class="tree-role">15 table definitions + metadata + sample questions</span></div>
+        <div class="tree-file"><div class="tree-dot" style="background:var(--c-db)"></div><span class="tree-name">seed.py</span><span class="tree-role">Seeds 830+ realistic rows across all 15 tables</span></div>
+        <div class="tree-file"><div class="tree-dot" style="background:var(--c-vec)"></div><span class="tree-name">schema_indexer.py</span><span class="tree-role">Builds ChromaDB vector index (one-time setup)</span></div>
+        <div class="tree-file"><div class="tree-dot" style="background:var(--c-vec)"></div><span class="tree-name">seed_cache.py</span><span class="tree-role">Pre-loads verified SQL for the 5 demo queries</span></div>
+      </div>
+
+      <div class="tree-folder">📁 frontend/</div>
+      <div class="indent2">
+        <div class="tree-file"><div class="tree-dot" style="background:var(--c-out)"></div><span class="tree-name">index.html</span><span class="tree-role">Chat UI — multi-session, SQL cards, results table</span></div>
+        <div class="tree-file"><div class="tree-dot" style="background:var(--c-out)"></div><span class="tree-name">flow.html</span><span class="tree-role">← This page — scroll-animated pipeline explainer</span></div>
+      </div>
+
+      <div class="tree-folder">📁 tests/</div>
+      <div class="indent2">
+        <div class="tree-file"><div class="tree-dot" style="background:var(--c-valid)"></div><span class="tree-name">test_query.py</span><span class="tree-role">8 SQL validation tests — all passing ✅</span></div>
+      </div>
+
+      <div class="tree-file indent1"><div class="tree-dot" style="background:var(--c-api)"></div><span class="tree-name">Dockerfile</span><span class="tree-role">Container build — seeds DB + indexes on build</span></div>
+      <div class="tree-file indent1"><div class="tree-dot" style="background:var(--c-api)"></div><span class="tree-name">docker-compose.yml</span><span class="tree-role">Orchestrates app + Ollama services</span></div>
+      <div class="tree-file indent1"><div class="tree-dot" style="background:var(--c-api)"></div><span class="tree-name">README.md</span><span class="tree-role">Full docs, architecture, setup instructions, API ref</span></div>
+      <div class="tree-file indent1"><div class="tree-dot" style="background:var(--c-db)"></div><span class="tree-name">enterprise.db</span><span class="tree-role">SQLite database — 15 tables, 830+ rows</span></div>
+      <div class="tree-file indent1"><div class="tree-dot" style="background:var(--c-vec)"></div><span class="tree-name">chroma_db/</span><span class="tree-role">ChromaDB persisted vector store (schema + cache)</span></div>
+      <div class="tree-file indent1"><div class="tree-dot" style="background:var(--c-api)"></div><span class="tree-name">.env</span><span class="tree-role">OLLAMA_BASE_URL, OLLAMA_MODEL, DATABASE_URL</span></div>
+      <div class="tree-file indent1"><div class="tree-dot" style="background:var(--c-api)"></div><span class="tree-name">requirements.txt</span><span class="tree-role">All Python dependencies pinned</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FINAL RESULT ═══ -->
+<section class="result-section" id="result">
+  <div class="result-title">The Final Answer</div>
+  <p class="result-sub">Exactly what the user sees after all 13 steps complete</p>
+
+  <div class="result-card" id="resultCard">
+    <div class="result-explanation">
+      The query has retrieved <strong>98 unpaid invoices</strong> from the last quarter with total amounts exceeding ₹5 lakhs each. Notably, several are overdue and still unpaid as of today. The largest unpaid invoice is <strong>₹14.81 lakhs</strong>, due April 16 2026, from Customer Corp 9.
+    </div>
+    <div class="result-section-head">⌨ SQL Query</div>
+    <div class="sql-display"><span class="kw">SELECT</span> i.invoice_id, c.customer_name, i.invoice_date,
+       i.total_amount, i.due_date, i.status
+<span class="kw">FROM</span> invoices <span class="kw">AS</span> i
+<span class="kw">JOIN</span> customers <span class="kw">AS</span> c <span class="kw">ON</span> i.customer_id = c.customer_id
+<span class="kw">WHERE</span> i.invoice_date >= <span class="fn">date</span>(<span class="str">'now'</span>, <span class="str">'-3 months'</span>)
+  <span class="kw">AND</span> i.total_amount > <span class="num">500000</span>
+  <span class="kw">AND</span> i.paid_amount < i.total_amount
+<span class="kw">ORDER BY</span> i.total_amount <span class="kw">DESC</span> <span class="kw">LIMIT</span> <span class="num">100</span></div>
+    <div class="result-section-head">▦ Results (showing first 10 of 98 rows)</div>
+    <div class="result-table-wrap">
+      <table class="rtbl">
+        <thead><tr><th>invoice_id</th><th>customer_name</th><th>total_amount (₹)</th><th>due_date</th><th>status</th></tr></thead>
+        <tbody>
+          <tr><td>97</td><td>Customer Corp 9</td><td>14,81,066</td><td>2026-04-16</td><td class="status-unpaid">unpaid</td></tr>
+          <tr><td>1</td><td>Customer Corp 50</td><td>14,76,309</td><td>2025-09-15</td><td class="status-overdue">overdue</td></tr>
+          <tr><td>111</td><td>Customer Corp 20</td><td>14,71,311</td><td>2025-09-15</td><td class="status-overdue">overdue</td></tr>
+          <tr><td>162</td><td>Customer Corp 51</td><td>14,50,504</td><td>2026-01-15</td><td class="status-unpaid">unpaid</td></tr>
+          <tr><td>135</td><td>Customer Corp 27</td><td>14,48,652</td><td>2026-04-14</td><td class="status-overdue">overdue</td></tr>
+          <tr><td>112</td><td>Customer Corp 91</td><td>14,45,469</td><td>2025-12-09</td><td class="status-partial">partial</td></tr>
+          <tr><td>6</td><td>Customer Corp 81</td><td>14,39,963</td><td>2026-02-26</td><td class="status-unpaid">unpaid</td></tr>
+          <tr><td>91</td><td>Customer Corp 2</td><td>14,34,810</td><td>2026-04-18</td><td class="status-overdue">overdue</td></tr>
+          <tr><td>38</td><td>Customer Corp 59</td><td>14,32,181</td><td>2025-08-24</td><td class="status-partial">partial</td></tr>
+          <tr><td>131</td><td>Customer Corp 70</td><td>14,28,466</td><td>2025-11-24</td><td class="status-unpaid">unpaid</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="result-meta">
+      <span class="badge b-rows">📊 98 rows</span>
+      <span class="badge b-conf">✓ High confidence</span>
+      <span class="badge b-time">⏱ 449ms</span>
+      <span class="badge b-cache">⚡ cached</span>
+      <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)">📋 invoices · customers</span>
+    </div>
+  </div>
+</section>
+
+<script>
+// Progress bar
+window.addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  document.getElementById('prog').style.width = (scrollY / h * 100) + '%';
+  document.getElementById('btt').style.display = scrollY > 500 ? 'flex' : 'none';
+});
+
+// IntersectionObserver for step cards
+const stepObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      const n = e.target.id.replace('s','');
+      if (!isNaN(n)) {
+        document.getElementById('stepnum').textContent = n;
+        document.getElementById('stepnav').style.display = 'block';
+      }
+    }
+  });
+}, { threshold: 0.15 });
+
+for (let i = 1; i <= 13; i++) {
+  const el = document.getElementById('s' + i);
+  if (el) stepObs.observe(el);
+}
+
+// Connectors
+const connObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.querySelector('.conn-line')?.classList.add('visible');
+  });
+}, { threshold: 0.5 });
+
+for (let i = 1; i <= 12; i++) {
+  const el = document.getElementById('c' + i);
+  if (el) connObs.observe(el);
+}
+
+// Architecture boxes
+const archObs = new IntersectionObserver(entries => {
+  entries.forEach((e, idx) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), idx * 80);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.observe-arch').forEach(el => archObs.observe(el));
+
+// Result card
+const resObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+const rc = document.getElementById('resultCard');
+if (rc) resObs.observe(rc);
+
+// Typing animation
+const text = 'Show unpaid invoices above 5 lakhs from last quarter';
+const el = document.getElementById('typed');
+let i = 0;
+function type() {
+  if (i < text.length) {
+    el.textContent += text[i++];
+    setTimeout(type, 45);
+  } else {
+    el.classList.remove('typed');
+  }
+}
+setTimeout(type, 800);
+</script>
+</body>
+</html>

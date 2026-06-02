@@ -1,0 +1,212 @@
+{
+  "info": {
+    "name": "DataMind — NLP-to-SQL Platform",
+    "description": "Enterprise AI Data Assistant API collection. Ask business questions in plain English and get SQL + results.\n\nBase URL: http://localhost:8000\n\nStart the server first:\n  uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/health",
+            "description": "Check if the server and database are running correctly."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Query",
+      "item": [
+        {
+          "name": "Ask — Unpaid Invoices Above 5 Lakhs",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/query",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Show unpaid invoices above 5 lakhs from last quarter\",\n  \"session_id\": \"demo-session-1\"\n}"
+            },
+            "description": "Demo query 1 — returns invoices with amount > 5,00,000 that are unpaid/overdue. Hits semantic cache (⚡ instant)."
+          }
+        },
+        {
+          "name": "Ask — Top 10 Vendors by Payment Delays",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/query",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Top 10 vendors by payment delays\",\n  \"session_id\": \"demo-session-1\"\n}"
+            },
+            "description": "Demo query 2 — returns vendors ranked by average delivery delay days."
+          }
+        },
+        {
+          "name": "Ask — Customers with Highest Outstanding Balance",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/query",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Customers with highest outstanding balance this month\",\n  \"session_id\": \"demo-session-1\"\n}"
+            },
+            "description": "Demo query 3 — returns customers sorted by outstanding balance with credit utilization %."
+          }
+        },
+        {
+          "name": "Ask — Total Expenses by Department",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/query",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Total expenses by department this year\",\n  \"session_id\": \"demo-session-1\"\n}"
+            },
+            "description": "Demo query 4 — returns department-wise expense totals for current year."
+          }
+        },
+        {
+          "name": "Ask — Products Below Reorder Level",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/query",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Products with stock below reorder level\",\n  \"session_id\": \"demo-session-1\"\n}"
+            },
+            "description": "Demo query 5 — returns products where stock_quantity < reorder_level, sorted by shortage."
+          }
+        },
+        {
+          "name": "Ask — Custom Business Question (LLM Generated)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/query",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Which employees in the Sales department joined this year?\",\n  \"session_id\": \"demo-session-2\"\n}"
+            },
+            "description": "Custom query — goes through full pipeline: intent → schema retrieval → graph JOIN discovery → Mistral SQL generation → validation → execution."
+          }
+        },
+        {
+          "name": "Ask — Chat Message (Intent Routing Demo)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/query",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What can you help me with?\",\n  \"session_id\": \"demo-session-3\"\n}"
+            },
+            "description": "Chat intent demo — classified as CHAT (not DATA), gets a direct conversational reply without SQL pipeline."
+          }
+        },
+        {
+          "name": "Multi-turn — Follow-up Question",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/query",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Show me only the overdue ones from the previous result\",\n  \"session_id\": \"demo-session-1\"\n}"
+            },
+            "description": "Multi-turn conversation demo — uses same session_id as a previous query. The system remembers conversation history and applies it to refine the SQL."
+          }
+        },
+        {
+          "name": "Streaming Response (SSE)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/query/stream",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Summarize the financial health of the company\",\n  \"session_id\": \"stream-demo\"\n}"
+            },
+            "description": "Streaming endpoint — returns Server-Sent Events (SSE). Tokens stream in real-time from Mistral. Use browser or curl to see streaming."
+          }
+        },
+        {
+          "name": "Get Conversation History",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/query/history/demo-session-1",
+            "description": "Returns full conversation history for a session. Shows multi-turn capability."
+          }
+        },
+        {
+          "name": "Clear Session",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/api/v1/query/session/demo-session-1",
+            "description": "Clears conversation history for a session."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Schema",
+      "item": [
+        {
+          "name": "List All Tables",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/schema/tables",
+            "description": "Returns all 15 enterprise tables with domain, description, and column count."
+          }
+        },
+        {
+          "name": "Get Table Details",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/schema/table/invoices",
+            "description": "Returns full schema for the invoices table — all columns, types, FK relationships."
+          }
+        },
+        {
+          "name": "Semantic Table Search",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/schema/search?q=vendor payment delays",
+              "query": [{ "key": "q", "value": "vendor payment delays" }]
+            },
+            "description": "ChromaDB vector search — finds the most relevant tables for a natural language query. Shows relevance scores."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Monitoring",
+      "item": [
+        {
+          "name": "Monitoring Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/metrics",
+            "description": "Live monitoring dashboard — total queries, success rate, cache hit rate, avg latency, schema graph stats, recent queries."
+          }
+        }
+      ]
+    }
+  ]
+}
