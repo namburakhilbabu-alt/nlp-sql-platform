@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     # Groq cloud API (set this for production / HF Spaces deployment)
     groq_api_key: str = ""
-    groq_model: str = "mixtral-8x7b-32768"
+    groq_model: str = "llama3-8b-8192"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 

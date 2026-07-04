@@ -21,12 +21,19 @@ def _generate_via_groq(prompt: str, temperature: float) -> str:
     }
     payload = {
         "model": settings.groq_model,
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": [
+            {"role": "system", "content": "You are a helpful SQL expert assistant."},
+            {"role": "user", "content": prompt},
+        ],
         "temperature": temperature,
         "max_tokens": 1024,
     }
     response = httpx.post(GROQ_API_URL, json=payload, headers=headers, timeout=60.0)
-    response.raise_for_status()
+
+    if response.status_code != 200:
+        logger.error(f"Groq error {response.status_code}: {response.text}")
+        response.raise_for_status()
+
     text = response.json()["choices"][0]["message"]["content"].strip()
     if not text:
         raise ValueError("Empty response from Groq")
@@ -67,7 +74,7 @@ def generate_with_retry(prompt: str, max_retries: int = 3, temperature: float = 
                 text = _generate_via_groq(prompt, temperature)
             else:
                 text = _generate_via_ollama(prompt, temperature)
-            logger.debug(f"{backend} response (attempt {attempt}): {text[:100]}")
+            logger.info(f"{backend} response OK (attempt {attempt}): {text[:80]}")
             return text
         except Exception as e:
             last_error = e
