@@ -42,8 +42,8 @@ def classify_intent(question: str) -> str:
         logger.info(f"Intent classified: '{question[:40]}' → {intent}")
         return intent
     except Exception as e:
-        logger.warning(f"Intent classification failed, defaulting to 'data': {e}")
-        return "data"
+        logger.warning(f"Intent classification failed, defaulting to 'chat': {e}")
+        return "chat"
 
 
 CHAT_PROMPT = """You are DataMind, a friendly enterprise AI data assistant.
