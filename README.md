@@ -1,3 +1,12 @@
+---
+title: DataMind
+emoji: 🧠
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+---
+
 # DataMind — Enterprise AI Data Assistant (NLP-to-SQL Platform)
 
 > Convert plain English business questions into optimized SQL queries across a large-scale enterprise database — powered by a cloud LLM (Groq), vector search, and graph-based schema reasoning.
