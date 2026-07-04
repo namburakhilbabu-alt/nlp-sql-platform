@@ -18,10 +18,6 @@ RUN python database/seed.py && \
     python database/schema_indexer.py && \
     python database/seed_cache.py
 
-# HF Spaces requires port 7860. Local Docker uses 8000.
-# Set PORT env var to override (HF Spaces sets it automatically).
-ENV PORT=7860
-
 EXPOSE 7860
 
-CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT}
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
