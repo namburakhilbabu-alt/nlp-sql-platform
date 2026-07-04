@@ -8,12 +8,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Pre-download the embedding model so first query isn't slow
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+
 COPY . .
 
+# Bake the database + vector index into the image (no runtime setup needed)
 RUN python database/seed.py && \
     python database/schema_indexer.py && \
     python database/seed_cache.py
 
-EXPOSE 8000
+# HF Spaces requires port 7860. Local Docker uses 8000.
+# Set PORT env var to override (HF Spaces sets it automatically).
+ENV PORT=7860
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 7860
+
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT}

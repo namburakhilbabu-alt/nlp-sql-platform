@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DataMind — System Overview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0a0e1a;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa, #34d399);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-bottom: 48px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Layout ── */
+  .page { max-width: 980px; margin: 0 auto; }
+
+  /* ── User input ── */
+  .user-box {
+    background: linear-gradient(135deg, #1e3a5f, #1e2d4f);
+    border: 2px solid #3b82f6;
+    border-radius: 16px;
+    padding: 20px 28px;
+    text-align: center;
+    margin-bottom: 8px;
+    box-shadow: 0 0 30px rgba(59,130,246,0.25);
+  }
+  .user-box .label { font-size: 0.7rem; color: #60a5fa; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .user-box .question { font-size: 1.1rem; color: #fff; font-weight: 600; font-family: monospace; }
+
+  /* ── Arrow ── */
+  .arrow {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 36px;
+    color: #475569;
+    font-size: 1.4rem;
+    position: relative;
+  }
+  .arrow::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(to bottom, #334155, #475569);
+  }
+  .arrow span {
+    background: #0a0e1a;
+    padding: 0 8px;
+    z-index: 1;
+    position: relative;
+  }
+
+  /* ── Step box ── */
+  .step {
+    border-radius: 14px;
+    padding: 16px 22px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    border: 1px solid transparent;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: default;
+  }
+  .step:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  .step-num {
+    min-width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  .step-body { flex: 1; }
+  .step-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 3px; }
+  .step-detail { font-size: 0.78rem; color: #94a3b8; line-height: 1.5; }
+  .step-file {
+    display: inline-block;
+    margin-top: 5px;
+    font-size: 0.7rem;
+    font-family: monospace;
+    background: rgba(0,0,0,0.3);
+    border-radius: 4px;
+    padding: 2px 8px;
+    color: #64748b;
+  }
+
+  /* Color themes per category */
+  .cat-api    { background: #0f1f35; border-color: #1d4ed8; }
+  .cat-api    .step-num { background: #1d4ed8; color: #fff; }
+  .cat-api    .step-title { color: #60a5fa; }
+
+  .cat-intent { background: #1a0f2e; border-color: #7c3aed; }
+  .cat-intent .step-num { background: #7c3aed; color: #fff; }
+  .cat-intent .step-title { color: #a78bfa; }
+
+  .cat-cache  { background: #0f2420; border-color: #059669; }
+  .cat-cache  .step-num { background: #059669; color: #fff; }
+  .cat-cache  .step-title { color: #34d399; }
+
+  .cat-schema { background: #1a1a0f; border-color: #d97706; }
+  .cat-schema .step-num { background: #d97706; color: #fff; }
+  .cat-schema .step-title { color: #fbbf24; }
+
+  .cat-graph  { background: #200f1a; border-color: #db2777; }
+  .cat-graph  .step-num { background: #db2777; color: #fff; }
+  .cat-graph  .step-title { color: #f472b6; }
+
+  .cat-llm    { background: #1f1209; border-color: #ea580c; }
+  .cat-llm    .step-num { background: #ea580c; color: #fff; }
+  .cat-llm    .step-title { color: #fb923c; }
+
+  .cat-valid  { background: #1a1f09; border-color: #65a30d; }
+  .cat-valid  .step-num { background: #65a30d; color: #fff; }
+  .cat-valid  .step-title { color: #a3e635; }
+
+  .cat-db     { background: #0f1f35; border-color: #0891b2; }
+  .cat-db     .step-num { background: #0891b2; color: #fff; }
+  .cat-db     .step-title { color: #22d3ee; }
+
+  .cat-explain{ background: #1a0f2e; border-color: #9333ea; }
+  .cat-explain .step-num { background: #9333ea; color: #fff; }
+  .cat-explain .step-title { color: #c084fc; }
+
+  .cat-save   { background: #0f2420; border-color: #0d9488; }
+  .cat-save   .step-num { background: #0d9488; color: #fff; }
+  .cat-save   .step-title { color: #2dd4bf; }
+
+  /* ── Branch (DATA vs CHAT) ── */
+  .branch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 8px 0;
+  }
+  .branch-box {
+    border-radius: 12px;
+    padding: 14px 18px;
+    text-align: center;
+    border: 1px dashed;
+  }
+  .branch-data { background: #0f1a35; border-color: #3b82f6; }
+  .branch-data .branch-label { color: #60a5fa; font-weight: 700; font-size: 0.85rem; }
+  .branch-chat { background: #1a0f35; border-color: #8b5cf6; }
+  .branch-chat .branch-label { color: #a78bfa; font-weight: 700; font-size: 0.85rem; }
+  .branch-desc { font-size: 0.75rem; color: #64748b; margin-top: 4px; }
+
+  /* ── Cache branch ── */
+  .cache-branch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 8px 0;
+  }
+  .cache-hit {
+    background: #0f2420;
+    border: 1px solid #059669;
+    border-radius: 12px;
+    padding: 14px 18px;
+    text-align: center;
+  }
+  .cache-hit .ch-label { color: #34d399; font-weight: 700; font-size: 0.85rem; }
+  .cache-hit .ch-desc { font-size: 0.75rem; color: #64748b; margin-top: 4px; }
+  .cache-miss {
+    background: #1f1209;
+    border: 1px dashed #ea580c;
+    border-radius: 12px;
+    padding: 14px 18px;
+    text-align: center;
+  }
+  .cache-miss .cm-label { color: #fb923c; font-weight: 700; font-size: 0.85rem; }
+  .cache-miss .cm-desc { font-size: 0.75rem; color: #64748b; margin-top: 4px; }
+
+  /* ── Response box ── */
+  .response-box {
+    background: linear-gradient(135deg, #0f2420, #0f1f35);
+    border: 2px solid #34d399;
+    border-radius: 16px;
+    padding: 20px 28px;
+    margin-top: 8px;
+    box-shadow: 0 0 30px rgba(52,211,153,0.15);
+  }
+  .response-box .label { font-size: 0.7rem; color: #34d399; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+  .response-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .resp-item {
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+  .resp-item .ri-key { font-size: 0.68rem; color: #64748b; font-family: monospace; margin-bottom: 3px; }
+  .resp-item .ri-val { font-size: 0.78rem; color: #cbd5e1; font-family: monospace; }
+
+  /* ── Storage section ── */
+  .section-title {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #475569;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin: 52px 0 20px;
+    position: relative;
+  }
+  .section-title::before, .section-title::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 30%;
+    height: 1px;
+    background: #1e293b;
+  }
+  .section-title::before { left: 0; }
+  .section-title::after { right: 0; }
+
+  .storage-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 36px;
+  }
+  .storage-card {
+    border-radius: 14px;
+    padding: 20px;
+    border: 1px solid;
+  }
+  .sc-chroma { background: #12100f; border-color: #d97706; }
+  .sc-sqlite { background: #0d1520; border-color: #0891b2; }
+  .sc-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 12px; }
+  .sc-chroma .sc-title { color: #fbbf24; }
+  .sc-sqlite .sc-title { color: #22d3ee; }
+  .sc-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .sc-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+  .sc-chroma .sc-dot { background: #fbbf24; }
+  .sc-sqlite .sc-dot { background: #22d3ee; }
+  .sc-text { font-size: 0.78rem; color: #94a3b8; line-height: 1.5; }
+  .sc-text strong { color: #e2e8f0; }
+
+  /* ── Embedding strip ── */
+  .embed-strip {
+    background: #0f1f35;
+    border: 1px solid #1d4ed8;
+    border-radius: 12px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 36px;
+  }
+  .embed-badge {
+    background: #1d4ed8;
+    color: #fff;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .embed-detail { font-size: 0.78rem; color: #64748b; line-height: 1.6; }
+  .embed-detail strong { color: #93c5fd; }
+
+  /* ── Interview cheatsheet ── */
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .cheat-card {
+    background: #0d1117;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    transition: border-color 0.2s;
+  }
+  .cheat-card:hover { border-color: #334155; }
+  .cheat-tech {
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: monospace;
+    white-space: nowrap;
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: #1e293b;
+    color: #60a5fa;
+    margin-top: 2px;
+  }
+  .cheat-line { font-size: 0.8rem; color: #94a3b8; line-height: 1.5; }
+
+  /* ── Retry box ── */
+  .retry-box {
+    background: #1a1f09;
+    border: 1px dashed #65a30d;
+    border-radius: 10px;
+    padding: 12px 18px;
+    margin: 4px 0;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    text-align: center;
+  }
+  .retry-box strong { color: #a3e635; }
+
+  /* ── Threshold badge ── */
+  .badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-family: monospace;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .badge-green { background: #064e3b; color: #34d399; }
+  .badge-orange { background: #431407; color: #fb923c; }
+  .badge-blue { background: #1e3a5f; color: #60a5fa; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>DataMind — NLP-to-SQL Platform</h1>
+  <p class="subtitle">COMPLETE SYSTEM FLOW &nbsp;·&nbsp; Interview Quick Reference</p>
+
+  <!-- USER INPUT -->
+  <div class="user-box">
+    <div class="label">User Input</div>
+    <div class="question">"Show unpaid invoices above 5 lakhs from last quarter"</div>
+  </div>
+
+  <div class="arrow"><span>▼</span></div>
+
+  <!-- STEP 1: FastAPI -->
+  <div class="step cat-api">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <div class="step-title">FastAPI receives POST /api/v1/query</div>
+      <div class="step-detail">Middleware logs request, assigns unique request ID (e.g. a3f9b2c1), starts timer</div>
+      <span class="step-file">app/api/routes/query.py · app/middleware/logging_middleware.py</span>
+    </div>
+  </div>
+
+  <div class="arrow"><span>▼</span></div>
+
+  <!-- STEP 2: Intent -->
+  <div class="step cat-intent">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <div class="step-title">Intent Classifier — Mistral 7B decides: DATA or CHAT?</div>
+      <div class="step-detail">Sends one-word prompt to Mistral. Returns "DATA" or "CHAT". Routes accordingly.</div>
+      <span class="step-file">app/llm/intent_classifier.py</span>
+    </div>
+  </div>
+
+  <div class="arrow"><span>▼</span></div>
+
+  <!-- BRANCH -->
+  <div class="branch">
+    <div class="branch-box branch-data">
+      <div class="branch-label">DATA</div>
+      <div class="branch-desc">Business question → full SQL pipeline below</div>
+    </div>
+    <div class="branch-box branch-chat">
+      <div class="branch-label">CHAT</div>
+      <div class="branch-desc">Conversational → Mistral replies directly. No SQL. Pipeline ends here.</div>
+    </div>
+  </div>
+
+  <div class="arrow"><span>▼ DATA path continues</span></div>
+
+  <!-- STEP 3: Cache -->
+  <div class="step cat-cache">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <div class="step-title">Semantic Cache Check — ChromaDB <span class="badge badge-green">threshold 0.92</span></div>
+      <div class="step-detail">Embed question → 384 numbers → compare with stored past questions via cosine similarity. If similarity ≥ 0.92 → CACHE HIT.</div>
+      <span class="step-file">app/services/cache_service.py</span>
+    </div>
+  </div>
+
+  <div class="arrow"><span>▼</span></div>
+
+  <!-- CACHE BRANCH -->
+  <div class="cache-branch">
+    <div class="cache-hit">
+      <div class="ch-label">⚡ CACHE HIT</div>
+      <div class="ch-desc">Return cached SQL + run on DB instantly.<br>Skip all LLM steps. ~50ms response.</div>
+    </div>
+    <div class="cache-miss">
+      <div class="cm-label">CACHE MISS → continue</div>
+      <div class="cm-desc">Never asked before.<br>Go through full pipeline.</div>
+    </div>
+  </div>
+
+  <div class="arrow"><span>▼ MISS path</span></div>
+
+  <!-- STEP 4: Schema -->
+  <div class="step cat-schema">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <div class="step-title">Schema Retrieval — ChromaDB finds relevant tables <span class="badge badge-orange">top_k=5</span></div>
+      <div class="step-detail">Embed question → search schema_metadata collection → returns top 5 tables by cosine similarity. e.g. invoices (0.94), customers (0.87), payments (0.76). Gets table structure (CREATE TABLE), NOT actual data.</div>
+      <span class="step-file">app/schema/schema_manager.py</span>
+    </div>
+  </div>
+
+  <div class="arrow"><span>▼</span></div>
+
+  <!-- STEP 5: Graph -->
+  <div class="step cat-graph">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <div class="step-title">JOIN Discovery — NetworkX FK Graph (auto, no hardcoding)</div>
+      <div class="step-detail">Foreign keys from schema = directed graph edges. Shortest path between relevant tables = JOIN conditions. e.g. invoices.customer_id → customers.customer_id discovered automatically.</div>
+      <span class="step-file">app/schema/schema_graph.py</span>
+    </div>
+  </div>
+
+  <div class="arrow"><span>▼</span></div>
+
+  <!-- STEP 6: Prompt -->
+  <div class="step cat-llm">
+    <div class="step-num">6</div>
+    <div class="step-body">
+      <div class="step-title">Adaptive Prompt Builder — assembles everything</div>
+      <div class="step-detail">Combines: table schemas + JOIN hints + business glossary (5 lakhs=500000, last quarter=date('now','-3 months')) + last 10 conversation turns. Sends one big prompt to Mistral.</div>
+      <span class="step-file">app/llm/prompt_builder.py</span>
+    </div>
+  </div>
+
+  <div class="arrow"><span>▼</span></div>
+
+  <!-- STEP 7: SQL Gen -->
+  <div class="step cat-llm">
+    <div class="step-num">7</div>
+    <div class="step-body">
+      <div class="step-title">SQL Generation — Mistral 7B via Ollama <span class="badge badge-orange">max 3 retries</span></div>
+      <div class="step-detail">HTTP POST → localhost:11434/api/generate → Mistral writes SQL. Confidence: attempt 1 = 1.0, attempt 2 = 0.85, attempt 3 = 0.70.</div>
+      <span class="step-file">app/llm/gemini_client.py</span>
+    </div>
+  </div>
+
+  <div class="arrow"><span>▼</span></div>
+
+  <!-- STEP 8: Validate -->
+  <div class="step cat-valid">
+    <div class="step-num">8</div>
+    <div class="step-body">
+      <div class="step-title">SQL Validator — safety + syntax checks</div>
+      <div class="step-detail">✅ Starts with SELECT &nbsp;·&nbsp; ✅ No DROP/DELETE/INSERT/UPDATE/DDL &nbsp;·&nbsp; ✅ Auto-adds LIMIT 100 &nbsp;·&nbsp; ✅ Strips markdown backticks</div>
+      <span class="step-file">app/validation/sql_validator.py</span>
+    </div>
+  </div>
+
+  <!-- RETRY -->
+  <div class="retry-box">
+    <strong>If validation fails</strong> → build correction prompt → retry (back to step 7, max 3×)
+  </div>
+
+  <div class="arrow"><span>▼ valid SQL</span></div>
+
+  <!-- STEP 9: Execute -->
+  <div class="step cat-db">
+    <div class="step-num">9</div>
+    <div class="step-body">
+      <div class="step-title">Execute on SQLite — enterprise.db (ACTUAL DATA)</div>
+      <div class="step-detail">SQLAlchemy runs SQL → fetchall() → converts rows to list of dicts. e.g. [{invoice_id: 12, customer_name: "Corp 9", total_amount: 1481066}, …98 rows]</div>
+      <span class="step-file">app/models/database.py</span>
+    </div>
+  </div>
+
+  <div class="arrow"><span>▼</span></div>
+
+  <!-- STEP 10: Explain -->
+  <div class="step cat-explain">
+    <div class="step-num">10</div>
+    <div class="step-body">
+      <div class="step-title">Business Explanation — Mistral 7B (second LLM call)</div>
+      <div class="step-detail">Passes results to Mistral → generates plain English: "There are 98 unpaid invoices exceeding ₹5 lakhs. Largest is ₹14.81 lakhs from Customer Corp 9…"</div>
+      <span class="step-file">app/services/query_service.py → _get_explanation()</span>
+    </div>
+  </div>
+
+  <div class="arrow"><span>▼</span></div>
+
+  <!-- STEP 11: Save -->
+  <div class="step cat-save">
+    <div class="step-num">11</div>
+    <div class="step-body">
+      <div class="step-title">Save to Cache + Conversation History + Metrics</div>
+      <div class="step-detail">Write question→SQL to ChromaDB query_cache · Save turn to session history · Record latency, success, cache hit rate</div>
+      <span class="step-file">cache_service.py · conversation_service.py · metrics_tracker.py</span>
+    </div>
+  </div>
+
+  <div class="arrow"><span>▼</span></div>
+
+  <!-- RESPONSE -->
+  <div class="response-box">
+    <div class="label">JSON Response to User</div>
+    <div class="response-grid">
+      <div class="resp-item">
+        <div class="ri-key">sql</div>
+        <div class="ri-val">"SELECT i.invoice_id, c.customer_name..."</div>
+      </div>
+      <div class="resp-item">
+        <div class="ri-key">row_count</div>
+        <div class="ri-val">98</div>
+      </div>
+      <div class="resp-item">
+        <div class="ri-key">from_cache</div>
+        <div class="ri-val">false</div>
+      </div>
+      <div class="resp-item">
+        <div class="ri-key">confidence_score</div>
+        <div class="ri-val">1.0</div>
+      </div>
+      <div class="resp-item">
+        <div class="ri-key">execution_time_ms</div>
+        <div class="ri-val">3421</div>
+      </div>
+      <div class="resp-item">
+        <div class="ri-key">explanation</div>
+        <div class="ri-val">"There are 98 unpaid invoices..."</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- STORAGE SECTION -->
+  <div class="section-title">THE 3 STORAGE LAYERS</div>
+
+  <!-- Embedding model strip -->
+  <div class="embed-strip">
+    <div class="embed-badge">Embedding Model</div>
+    <div class="embed-detail">
+      <strong>all-MiniLM-L6-v2</strong> (sentence-transformers) · runs locally on CPU · no API key<br>
+      Input: any text string &nbsp;→&nbsp; Output: <strong>384 float numbers</strong> (a vector) · ~5ms per call<br>
+      Used in: cache check (step 3) AND schema retrieval (step 4)
+    </div>
+  </div>
+
+  <div class="storage-grid">
+    <div class="storage-card sc-chroma">
+      <div class="sc-title">ChromaDB (chroma_db/)</div>
+      <div class="sc-row">
+        <div class="sc-dot"></div>
+        <div class="sc-text"><strong>Collection: schema_metadata</strong><br>15 rows — one per table. Stores table description + columns as vectors. Used in step 4 to find relevant tables.</div>
+      </div>
+      <div class="sc-row">
+        <div class="sc-dot"></div>
+        <div class="sc-text"><strong>Collection: query_cache</strong><br>Stores past question→SQL pairs as vectors. Used in step 3 for instant cache hits. Similarity threshold = 0.92.</div>
+      </div>
+      <div class="sc-row">
+        <div class="sc-dot"></div>
+        <div class="sc-text"><strong>Does NOT contain actual business data.</strong> Only descriptions + past queries.</div>
+      </div>
+    </div>
+    <div class="storage-card sc-sqlite">
+      <div class="sc-title">SQLite (enterprise.db)</div>
+      <div class="sc-row"><div class="sc-dot"></div><div class="sc-text"><strong>Finance:</strong> invoices (200), payments (150), expenses (80)</div></div>
+      <div class="sc-row"><div class="sc-dot"></div><div class="sc-text"><strong>Sales:</strong> customers (100), sales_orders (120), contracts (30)</div></div>
+      <div class="sc-row"><div class="sc-dot"></div><div class="sc-text"><strong>Procurement:</strong> vendors (40), purchase_orders (100)</div></div>
+      <div class="sc-row"><div class="sc-dot"></div><div class="sc-text"><strong>HR:</strong> employees (50), departments (7), leaves (60)</div></div>
+      <div class="sc-row"><div class="sc-dot"></div><div class="sc-text"><strong>Inventory:</strong> products (60), inventory_transactions (80)</div></div>
+    </div>
+  </div>
+
+
+  <!-- INTERVIEW CHEATSHEET -->
+  <div class="section-title">INTERVIEW CHEATSHEET — ONE-LINERS</div>
+
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <div class="cheat-tech">ChromaDB</div>
+      <div class="cheat-line">Vector database. Stores table descriptions + past queries as 384-number arrays. Finds similar text using cosine similarity.</div>
+    </div>
+    <div class="cheat-card">
+      <div class="cheat-tech">Mistral 7B</div>
+      <div class="cheat-line">Local LLM via Ollama. Called twice per query: once to generate SQL, once to explain results in plain English.</div>
+    </div>
+    <div class="cheat-card">
+      <div class="cheat-tech">NetworkX</div>
+      <div class="cheat-line">Graph library. FK relationships = edges. Shortest path between tables = auto-discovered JOIN conditions. Zero hardcoding.</div>
+    </div>
+    <div class="cheat-card">
+      <div class="cheat-tech">Ollama</div>
+      <div class="cheat-line">Runs Mistral 7B locally at localhost:11434. No API key, no internet, no cost. We POST prompt, get text back.</div>
+    </div>
+    <div class="cheat-card">
+      <div class="cheat-tech">SQLAlchemy</div>
+      <div class="cheat-line">ORM that executes generated SQL on enterprise.db. Returns list of dicts. Has safety layer (SELECT only).</div>
+    </div>
+    <div class="cheat-card">
+      <div class="cheat-tech">Semantic Cache</div>
+      <div class="cheat-line">If new question is 92% similar to a past question → return cached SQL instantly. Skips ALL LLM calls. ~50ms vs ~3500ms.</div>
+    </div>
+    <div class="cheat-card">
+      <div class="cheat-tech">Intent Router</div>
+      <div class="cheat-line">Mistral classifies every input as DATA or CHAT. DATA → SQL pipeline. CHAT → direct conversational reply.</div>
+    </div>
+    <div class="cheat-card">
+      <div class="cheat-tech">MiniLM-L6-v2</div>
+      <div class="cheat-line">Embedding model. Converts any text to 384 numbers locally. Used by ChromaDB automatically for all vector operations.</div>
+    </div>
+    <div class="cheat-card">
+      <div class="cheat-tech">Cosine Sim</div>
+      <div class="cheat-line">Measures angle between two vectors. 1.0 = identical meaning, 0.0 = opposite. We use 0.92 as cache threshold.</div>
+    </div>
+    <div class="cheat-card">
+      <div class="cheat-tech">SSE Streaming</div>
+      <div class="cheat-line">Server-Sent Events at /query/stream. Tokens stream to browser in real time like ChatGPT. Uses FastAPI StreamingResponse.</div>
+    </div>
+    <div class="cheat-card">
+      <div class="cheat-tech">Session ID</div>
+      <div class="cheat-line">Multi-turn conversation. Each session stores last 10 turns in memory. Follow-up questions use previous context.</div>
+    </div>
+    <div class="cheat-card">
+      <div class="cheat-tech">Confidence</div>
+      <div class="cheat-line">Decreases per retry: 1.0 → 0.85 → 0.70. Shows how many attempts Mistral needed to produce valid SQL.</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
