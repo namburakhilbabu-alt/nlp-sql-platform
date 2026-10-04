@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from app.services.query_service import run_query
 from app.llm.intent_classifier import classify_intent, generate_chat_response
-from app.llm.gemini_client import generate_with_retry
+from app.llm.gemini_client import generate_with_retry, LLMUnavailableError
 from app.services.conversation_service import get_history, clear_session, add_turn
 from app.core.metrics_tracker import record_query
 from app.core.logging_config import logger
@@ -37,6 +37,7 @@ class QueryResponse(BaseModel):
 def ask_question(req: QueryRequest):
     session = req.session_id or "default"
     question = req.question.strip()
+    intent = "unknown"
 
     try:
         intent = classify_intent(question)
@@ -67,6 +68,10 @@ def ask_question(req: QueryRequest):
             execution_time_ms=result.execution_time_ms,
         )
 
+    except LLMUnavailableError as e:
+        record_query(question, intent, False, 0, error=str(e))
+        logger.error(f"LLM unavailable: {e}")
+        raise HTTPException(status_code=503, detail=f"The language model is unavailable. {e}")
     except RuntimeError as e:
         record_query(question, intent, False, 0, error=str(e))
         logger.error(f"Query pipeline failed: {e}")

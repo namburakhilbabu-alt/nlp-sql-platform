@@ -63,6 +63,19 @@ def _generate_via_ollama(prompt: str, temperature: float) -> str:
     return text
 
 
+class LLMUnavailableError(RuntimeError):
+    """The LLM backend (Groq or Ollama) could not produce a response after all retries."""
+
+
+def _setup_hint(use_groq: bool) -> str:
+    if use_groq:
+        return f"Check GROQ_API_KEY and that GROQ_MODEL '{settings.groq_model}' is still offered by Groq."
+    return (
+        f"GROQ_API_KEY is not set, so Ollama at {settings.ollama_base_url} was used — "
+        f"make sure it is running with model '{settings.ollama_model}', or set GROQ_API_KEY."
+    )
+
+
 def generate_with_retry(prompt: str, max_retries: int = 3, temperature: float = 0.1) -> str:
     use_groq = bool(settings.groq_api_key)
     backend = "Groq" if use_groq else "Ollama"
@@ -82,4 +95,6 @@ def generate_with_retry(prompt: str, max_retries: int = 3, temperature: float = 
             if attempt < max_retries:
                 time.sleep(2 ** attempt)
 
-    raise RuntimeError(f"{backend} API failed after {max_retries} retries: {last_error}")
+    raise LLMUnavailableError(
+        f"{backend} API failed after {max_retries} retries: {last_error}. {_setup_hint(use_groq)}"
+    )

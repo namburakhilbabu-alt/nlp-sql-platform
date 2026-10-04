@@ -33,17 +33,17 @@ Reply with a single word only — DATA or CHAT:"""
 
 
 def classify_intent(question: str) -> str:
-    """Returns 'data' or 'chat'."""
-    try:
-        prompt = CLASSIFY_PROMPT.format(question=question.strip())
-        raw = generate_with_retry(prompt, max_retries=2, temperature=0.0)
-        result = raw.strip().upper().split()[0] if raw.strip() else "DATA"
-        intent = "data" if "DATA" in result else "chat"
-        logger.info(f"Intent classified: '{question[:40]}' → {intent}")
-        return intent
-    except Exception as e:
-        logger.warning(f"Intent classification failed, defaulting to 'chat': {e}")
-        return "chat"
+    """Returns 'data' or 'chat'.
+
+    Raises LLMUnavailableError if the LLM can't be reached — the caller reports it,
+    rather than silently treating every question as small talk.
+    """
+    prompt = CLASSIFY_PROMPT.format(question=question.strip())
+    raw = generate_with_retry(prompt, max_retries=2, temperature=0.0)
+    result = raw.strip().upper().split()[0] if raw.strip() else "DATA"
+    intent = "data" if "DATA" in result else "chat"
+    logger.info(f"Intent classified: '{question[:40]}' → {intent}")
+    return intent
 
 
 CHAT_PROMPT = """You are DataMind, a friendly enterprise AI data assistant.
