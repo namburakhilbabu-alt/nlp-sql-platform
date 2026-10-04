@@ -36,14 +36,14 @@ User Question (plain English)
         │
         ▼
 ┌──────────────────────────────────────────────────────┐
-│              Intent Router (Llama 3.1 via Groq)      │
+│              Intent Router (GPT-OSS via Groq)        │
 │         Classifies: DATA query vs CHAT message       │
 └────────────┬─────────────────────────────────────────┘
              │ DATA                      │ CHAT
              ▼                           ▼
 ┌────────────────────┐       ┌─────────────────────┐
 │  Semantic Cache    │       │  Conversational Reply│
-│  ChromaDB cos≥0.92 │       │  (Llama 3.1 directly)│
+│  ChromaDB cos≥0.92 │       │  (GPT-OSS directly)  │
 └───────┬────────────┘       └─────────────────────┘
         │ MISS
         ▼
@@ -66,7 +66,7 @@ User Question (plain English)
 └───────────────────────┬──────────────────────────────┘
                         ▼
 ┌──────────────────────────────────────────────────────┐
-│    SQL Generation — Llama 3.1 8B via Groq (cloud)   │
+│    SQL Generation — GPT-OSS 20B via Groq (cloud)     │
 │    Auto-retry up to 3× with correction prompt        │
 │    Confidence score decreases per retry              │
 └───────────────────────┬──────────────────────────────┘
@@ -83,7 +83,7 @@ User Question (plain English)
 └───────────────────────┬──────────────────────────────┘
                         ▼
 ┌──────────────────────────────────────────────────────┐
-│    Business Explanation — Llama 3.1 via Groq         │
+│    Business Explanation — GPT-OSS via Groq           │
 │    Plain English summary for non-technical users     │
 └───────────────────────┬──────────────────────────────┘
                         ▼
@@ -99,7 +99,7 @@ User Question (plain English)
 |---|---|
 | REST APIs | FastAPI — 9 endpoints, auto Swagger at `/docs` |
 | Schema retrieval system | ChromaDB vector search, sentence-transformers |
-| SQL generation | Llama 3.1 8B via Groq API (cloud, free) |
+| SQL generation | GPT-OSS 20B via Groq API (cloud, free) |
 | SQL validation layer | Blocks all DDL/DML, verifies SELECT-only |
 | Retry handling | 3 attempts with automatic correction prompt |
 | Logging | Structured logs — console + `logs/app.log` |
@@ -110,7 +110,7 @@ User Question (plain English)
 | Feature | Implementation |
 |---|---|
 | Multi-turn conversation | Session-ID based history, last 10 turns |
-| Query explanation engine | Llama 3.1 generates plain English summaries |
+| Query explanation engine | GPT-OSS 20B generates plain English summaries |
 | Business glossary mapping | lakhs, crores, last quarter, overdue — in every prompt |
 | Query confidence scoring | Decreases per retry (1.0 → 0.85 → 0.70) |
 | Semantic caching | ChromaDB cosine similarity ≥ 0.92 → instant return |
@@ -132,7 +132,7 @@ User Question (plain English)
 | Layer | Technology |
 |---|---|
 | Backend | Python 3.12 · FastAPI · Uvicorn |
-| LLM (Cloud) | Llama 3.1 8B Instant via Groq API (free, ~500 tokens/sec) |
+| LLM (Cloud) | GPT-OSS 20B via Groq API (free tier, ~1000 tokens/sec) |
 | LLM (Local fallback) | Mistral 7B via Ollama (used when GROQ_API_KEY not set) |
 | Embeddings | sentence-transformers (all-MiniLM-L6-v2) |
 | Vector Store | ChromaDB — schema index + semantic query cache |
@@ -148,7 +148,7 @@ The app auto-selects the LLM backend based on your environment:
 
 | Mode | When | Model | Speed |
 |---|---|---|---|
-| **Groq (cloud)** | `GROQ_API_KEY` is set | Llama 3.1 8B Instant | ~1-2 sec |
+| **Groq (cloud)** | `GROQ_API_KEY` is set | GPT-OSS 20B | ~1-2 sec |
 | **Ollama (local)** | No `GROQ_API_KEY` | Mistral 7B | ~10-30 sec |
 
 No code change needed — just set the env var.
@@ -402,15 +402,15 @@ See the **interactive flow explainer** at `http://localhost:8000/app/flow.html` 
 
 1. **FastAPI** receives `POST /api/v1/query`
 2. **Logging middleware** assigns request ID, logs start
-3. **Intent classifier** — Llama 3.1 decides: DATA or CHAT?
+3. **Intent classifier** — GPT-OSS 20B decides: DATA or CHAT?
 4. **Semantic cache** — ChromaDB checks cosine similarity ≥ 0.92
 5. **Schema retrieval** — vector search finds top-5 relevant tables
 6. **Schema graph** — NetworkX traverses FK graph, discovers JOINs
 7. **Adaptive prompt** — schema + JOIN hints + glossary assembled
-8. **SQL generation** — Llama 3.1 generates SQL (retry on failure)
+8. **SQL generation** — GPT-OSS 20B generates SQL (retry on failure)
 9. **SQL validator** — safety checks, SELECT-only enforcement
 10. **DB execution** — SQLAlchemy runs query on SQLite
-11. **Explanation** — Llama 3.1 writes plain English business summary
+11. **Explanation** — GPT-OSS 20B writes plain English business summary
 12. **Metrics + cache** — latency recorded, SQL cached for future
 13. **JSON response** — structured response to frontend
 
@@ -443,7 +443,7 @@ tests/test_query.py::test_non_select_raises      PASSED
 | Variable | Default | Description |
 |---|---|---|
 | `GROQ_API_KEY` | *(empty)* | Groq API key — get free at console.groq.com. When set, Groq is used automatically. |
-| `GROQ_MODEL` | `llama-3.1-8b-instant` | Groq model name |
+| `GROQ_MODEL` | `openai/gpt-oss-20b` | Groq model name |
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama server URL (used as fallback when no Groq key) |
 | `OLLAMA_MODEL` | `mistral` | Ollama model name |
 | `DATABASE_URL` | `sqlite:///./enterprise.db` | SQLAlchemy connection string |
