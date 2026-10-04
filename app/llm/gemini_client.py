@@ -26,15 +26,25 @@ def _generate_via_groq(prompt: str, temperature: float) -> str:
             {"role": "user", "content": prompt},
         ],
         "temperature": temperature,
-        "max_tokens": 1024,
+        "max_tokens": 2048,
     }
+    if settings.groq_model.startswith("openai/gpt-oss"):
+        # Reasoning model: keep thinking short (it shares the token budget) and
+        # leave it out of the reply so we only get the answer text back.
+        payload["reasoning_effort"] = "low"
+        payload["include_reasoning"] = False
+
     response = httpx.post(GROQ_API_URL, json=payload, headers=headers, timeout=60.0)
 
     if response.status_code != 200:
         logger.error(f"Groq error {response.status_code}: {response.text}")
-        response.raise_for_status()
+        try:
+            detail = response.json()["error"]["message"]
+        except Exception:
+            detail = response.text[:300]
+        raise RuntimeError(f"Groq error {response.status_code}: {detail}")
 
-    text = response.json()["choices"][0]["message"]["content"].strip()
+    text = (response.json()["choices"][0]["message"].get("content") or "").strip()
     if not text:
         raise ValueError("Empty response from Groq")
     return text
