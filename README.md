@@ -247,6 +247,26 @@ ollama pull mistral
 docker-compose up --build
 ```
 
+### Deploy to Hugging Face Spaces (free)
+
+The `Dockerfile` bakes the database, schema index and SQL cache into the image, so the Space needs no runtime setup.
+
+1. Get a free Groq API key at [console.groq.com](https://console.groq.com) → **API Keys**.
+2. On [huggingface.co](https://huggingface.co) → **New Space** → SDK **Docker** → **Blank** → hardware **CPU basic** (free).
+3. In the Space → **Settings** → **Variables and secrets**, add the secret `GROQ_API_KEY`. Optionally add the variable `GROQ_MODEL` (default `openai/gpt-oss-20b`).
+4. Mirror this repo into the Space. Create a Hugging Face token with **write** access (huggingface.co → Settings → Access Tokens), then run this from the repo root:
+   ```bash
+   pip install -U huggingface_hub
+   hf auth login                      # paste the write token
+   hf upload <user>/<space> . . --repo-type space \
+       --exclude ".git/*" --delete "*" \
+       --commit-message "Sync from GitHub"
+   ```
+   `--delete "*"` removes files on the Space that aren't in the repo, so the Space matches GitHub exactly. Avoid dragging single files into the web UI, because stale copies get left behind. Re-run the command after every change.
+5. Wait for the build (about 5–8 minutes the first time), then open `https://<user>-<space>.hf.space`. API docs are at `/docs` and the health check is at `/api/v1/health`.
+
+> Free Spaces sleep after about 48 hours without traffic. The first visit afterwards wakes the Space and takes a minute or two.
+
 ---
 
 ## API Reference
@@ -429,11 +449,14 @@ tests/test_query.py::test_blocks_drop            PASSED
 tests/test_query.py::test_blocks_delete          PASSED
 tests/test_query.py::test_blocks_insert          PASSED
 tests/test_query.py::test_auto_adds_limit        PASSED
-tests/test_query.py::test_strips_markdown        PASSED
+tests/test_query.py::test_strips_markdown_backticks PASSED
 tests/test_query.py::test_empty_sql_raises       PASSED
 tests/test_query.py::test_non_select_raises      PASSED
+tests/test_query_service.py::test_successful_query_is_cached             PASSED
+tests/test_query_service.py::test_failing_sql_is_not_returned_or_cached  PASSED
+tests/test_query_service.py::test_llm_outage_is_not_retried_as_bad_sql   PASSED
 
-8 passed in 0.12s
+11 passed in 0.33s
 ```
 
 ---

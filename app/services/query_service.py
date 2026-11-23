@@ -6,7 +6,7 @@ Pipeline: question → schema retrieval → graph join discovery →
 import time
 from app.schema.schema_manager import get_relevant_tables, get_table_schema_text
 from app.schema.schema_graph import discover_joins
-from app.llm.gemini_client import generate_with_retry
+from app.llm.gemini_client import generate_with_retry, LLMUnavailableError
 from app.llm.prompt_builder import build_sql_prompt, build_explanation_prompt, build_correction_prompt
 from app.validation.sql_validator import validate_sql, extract_sql_from_response, SQLValidationError
 from app.models.database import execute_query
@@ -77,6 +77,7 @@ def run_query(question: str, session_id: str = "default") -> QueryResult:
     data = []
     last_error = None
     confidence = 0.0
+    succeeded = False
 
     for attempt in range(1, MAX_RETRIES + 1):
         try:
@@ -93,9 +94,13 @@ def run_query(question: str, session_id: str = "default") -> QueryResult:
             sql = validate_sql(sql)
             data = execute_query(sql)
             confidence = round(1.0 - (attempt - 1) * 0.15, 2)
+            succeeded = True
             logger.info(f"SQL succeeded on attempt {attempt} | rows={len(data)}")
             break
 
+        except LLMUnavailableError:
+            # The model itself is down — retrying the SQL loop won't help.
+            raise
         except SQLValidationError as e:
             last_error = e
             logger.warning(f"Attempt {attempt} validation: {e}")
@@ -103,7 +108,8 @@ def run_query(question: str, session_id: str = "default") -> QueryResult:
             last_error = e
             logger.warning(f"Attempt {attempt} execution: {e}")
 
-    if sql is None:
+    if not succeeded:
+        # Never return (or cache) SQL that failed validation or execution.
         raise RuntimeError(
             f"Could not generate valid SQL after {MAX_RETRIES} attempts. "
             f"Last error: {last_error}"
