@@ -27,6 +27,8 @@ WHERE i.invoice_date >= date('now', '-3 months') AND i.total_amount > 500000 ...
 98 rows · "There are 98 unpaid invoices exceeding ₹5 lakhs. The largest is ₹14.81 lakhs from Customer Corp 9..."
 ```
 
+> The demo data is generated with dates relative to the day the image is built, so row counts for time-based questions ("last quarter") vary between builds and shrink as a long-running deployment ages. Rebuilding refreshes them.
+
 ---
 
 ## Architecture
@@ -113,7 +115,7 @@ User Question (plain English)
 | Query explanation engine | GPT-OSS 20B generates plain English summaries |
 | Business glossary mapping | lakhs, crores, last quarter, overdue — in every prompt |
 | Query confidence scoring | Decreases per retry (1.0 → 0.85 → 0.70) |
-| Semantic caching | ChromaDB cosine similarity ≥ 0.92 → instant return |
+| Semantic caching | ChromaDB cosine similarity ≥ 0.92 **and** matching constraints (numbers, time window, direction, status) → instant return |
 
 ### Bonus ✅
 | Feature | Implementation |
@@ -384,6 +386,7 @@ nlp-sql-platform/
 │   ├── services/
 │   │   ├── query_service.py      # Main 13-step pipeline orchestrator
 │   │   ├── cache_service.py      # Semantic cache (ChromaDB)
+│   │   ├── cache_guard.py        # Rejects cache hits whose constraints differ
 │   │   └── conversation_service.py # Multi-turn session management
 │   │
 │   ├── validation/
@@ -423,7 +426,7 @@ See the **interactive flow explainer** at `http://localhost:8000/app/flow.html` 
 1. **FastAPI** receives `POST /api/v1/query`
 2. **Logging middleware** assigns request ID, logs start
 3. **Intent classifier** — GPT-OSS 20B decides: DATA or CHAT?
-4. **Semantic cache** — ChromaDB checks cosine similarity ≥ 0.92
+4. **Semantic cache** — ChromaDB checks cosine similarity ≥ 0.92, then a constraint guard rejects matches that differ in amount, time window, direction or status
 5. **Schema retrieval** — vector search finds top-5 relevant tables
 6. **Schema graph** — NetworkX traverses FK graph, discovers JOINs
 7. **Adaptive prompt** — schema + JOIN hints + glossary assembled
@@ -455,8 +458,9 @@ tests/test_query.py::test_non_select_raises      PASSED
 tests/test_query_service.py::test_successful_query_is_cached             PASSED
 tests/test_query_service.py::test_failing_sql_is_not_returned_or_cached  PASSED
 tests/test_query_service.py::test_llm_outage_is_not_retried_as_bad_sql   PASSED
+tests/test_cache_guard.py  (13 constraint cases)                         PASSED
 
-11 passed in 0.33s
+24 passed in 0.90s
 ```
 
 ---
